@@ -4,22 +4,23 @@ Investigação e possível software alternativo para o visor do water cooler Ris
 
 ## Estado atual
 
-Ambiente preparado para continuidade. Nenhum protocolo foi decodificado, nenhum comando experimental foi enviado ao dispositivo e nenhum software alternativo foi implementado.
+Primeiro marco atingido. O protocolo HID de comunicação com o visor foi decodificado a partir da engenharia reversa dos binários originais. Os identificadores de hardware (`VID: 0xAA88`, `PID: 0x8666`) e o payload de 24 bytes foram identificados e documentados em `docs/PROTOCOL.md`.
 
 O usuário confirma que o software original só controla o visor. Não assumir controle de bomba, ventoinhas ou iluminação.
 
 ## Objetivo
 
-Descobrir o que o visor aceita receber e avaliar um aplicativo próprio para exibir outras informações. A possibilidade de imagens, layouts ou animações ainda não está demonstrada.
+Desenvolver um aplicativo/serviço próprio leve e confiável para alimentar o visor com informações do sistema (temperatura de CPU, GPU, porcentagens etc.), sem a necessidade do software proprietário.
 
 ## Conteúdo
 
 - docs/CONTEXT.md: fatos, hipóteses e fontes da investigação anterior.
-- docs/NEXT-STEPS.md: etapas para iniciar a investigação técnica.
-- evidence/vendor/: cópia local dos arquivos da instalação original, incluindo configurações e histórico de sensores.
+- docs/NEXT-STEPS.md: etapas do plano de desenvolvimento.
+- docs/PROTOCOL.md: especificação técnica do protocolo USB HID e mapeamento dos bytes.
+- evidence/vendor/: cópia local dos arquivos da instalação original.
 - evidence/manifest.json: tamanhos e hashes SHA-256 da cópia.
-- evidence/captures/: reservado para capturas futuras.
-- src/ e tools/: reservados para implementação e ferramentas futuras.
+- evidence/captures/: reservado para capturas de tráfego.
+- src/ e tools/: reservados para implementação e ferramentas de teste.
 
 ## Ambiente
 
