@@ -1,0 +1,9 @@
+evidence/vendor/
+evidence/captures/*
+!evidence/captures/.gitkeep
+work/
+.env
+.venv/
+__pycache__/
+bin/
+obj/
