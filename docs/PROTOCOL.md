@@ -10,8 +10,11 @@ O visor é controlado através de uma interface USB HID genérica.
 
 - **Vendor ID (VID):** `0xAA88` (decimal `43656`)
 - **Product ID (PID):** `0x8666` (decimal `34406`)
+- **Fabricante (USB String):** `铭研科技` (Mingyan Technology)
+- **Nome do Produto (USB String):** `温度显示HID设备` ("Dispositivo HID de Exibição de Temperatura")
 - **Identificador de Busca no Windows:** strings contendo `"aa88"` e `"8666"` no caminho do dispositivo HID (`\\?\hid#vid_aa88&pid_8666...`).
 - **Comunicação:** Chamadas HID diretas (`CreateFile`, `WriteFile` com `FileAccess.ReadWrite`).
+- **Tamanho do Output Report:** 11 bytes (Report ID `0x00` + 10 bytes de payload de sensores).
 
 ---
 
