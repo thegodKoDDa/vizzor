@@ -1,11 +1,11 @@
 ========================================================================
-    VIZZOR - Software Aberto Multi-Water Cooler & Displays HID
+    VIZZOR v3.2 - Software Aberto Multi-Water Cooler & Displays HID
 ========================================================================
 
 O Vizzor é um software independente, ultraleve e de código aberto desenvolvido
 para substituir os programas proprietários no controle de displays e visores de
 water coolers e coolers de gabinete:
-  - Rise Mode Aura Ice Black / White ARGB 360 mm (RM-WAIB-06-ARGB)
+  - Rise Mode Aura Ice Black / White ARGB 240/360 mm (RM-WAIB-06-ARGB)
   - Mingyan OEM Displays (VID 0xAA88)
   - DeepCool Digital Series (AK400 / AK500 / AK620 Digital, CH560 Digital)
   - NZXT Kraken Series (Kraken Z53/Z63/Z73, Kraken 2023 / Elite)
@@ -38,6 +38,7 @@ Opção 1: Instalação Automática (Recomendada)
    - Clique duas vezes em 'Instalar.bat' como Administrador.
    - Ele instala o PawnIO (se necessário), copia os arquivos para C:\Vizzor
      e configura a inicialização automática com o Windows na bandeja do sistema.
+   - ZERO ATALHOS NA ÁREA DE TRABALHO: o Vizzor opera discretamente na bandeja.
 
 Opção 2: Modo Portátil (Sem Instalação)
    - Basta manter esta pasta onde quiser e dar dois cliques em 'Vizzor.exe'.
@@ -49,8 +50,15 @@ Opção 3: Executável Avulso (Vizzor_Standalone.exe)
 ------------------------------------------------------------------------
 RECURSOS DISPONÍVEIS
 ------------------------------------------------------------------------
-- Painel Dark Mode completo (dois cliques no ícone da bandeja para abrir)
-- Multilíngue com 1 clique (🇧🇷 Português / 🇺🇸 English)
+- Bandeja do Sistema (Tray do Windows):
+  * Ícone dinâmico desenhando a temperatura ao vivo com cores térmicas adaptativas.
+  * Clique com Botão Direito: menu contextual completo com modos de exibição,
+    velocidades de atualização (500ms, 1s, 2s), tempos de alternância, efeitos,
+    opção 'Desativar Softwares Conflitantes de Fabricantes' e encerramento.
+- Painel de Controle Dark Mode:
+  * Exibe dinamicamente o modelo real do cooler do usuário (ou fica vazio se desconectado).
+  * Réplica visual circular do display físico.
+  * Alternador de idioma instantâneo (🇧🇷 Português / 🇺🇸 English).
 - Suporte a múltiplos sensores de hardware:
   * CPU (Ryzen e Intel): temperatura e uso (%)
   * GPU (NVIDIA GeForce e AMD Radeon): temperatura e uso (%)
@@ -67,7 +75,6 @@ RECURSOS DISPONÍVEIS
   * Detecta todos os dispositivos HID USB conectados, VID/PID e status de compatibilidade
   * Botão 'Copiar Relatório' pronto para abrir issues no GitHub com suporte a novos coolers
 - Alerta visual térmico no display do gabinete se ultrapassar 85°C
-- Ícone dinâmico com números ao vivo na bandeja do sistema Windows
 
 Projeto de código aberto sob licença MIT.
 GitHub: https://github.com/thegodKoDDa/vizzor

@@ -111,3 +111,19 @@ O `DeviceManager` itera sobre a lista de drivers registrados na inicialização.
 
 * **Scanner USB HID:** Desenvolvido através das APIs do Windows `setupapi.dll` (`SetupDiGetClassDevs`, `SetupDiEnumDeviceInterfaces`, `SetupDiGetDeviceInterfaceDetail`) e `hid.dll`, permitindo listar e diagnosticar qualquer periférico HID USB do computador sem bibliotecas externas.
 * **Slider de Teste Manual (0 a 99):** Intercepta o loop de envio do `TrayApplicationContext`. Quando o usuário ativa o teste manual no Dashboard, a telemetria é temporariamente substituída pelo valor exato do controle deslizante, permitindo testar cada número e segmento do mostrador de LED físico.
+
+---
+
+## 7. Detecção Dinâmica e Exibição do Modelo Real do Usuário
+
+O `DeviceManager` escaneia o barramento USB periodicamente. Diferente de versões anteriores que aplicavam um *fallback* arbitrário:
+* Se um cooler suportado estiver fisicamente conectado, seu nome oficial é exibido no cabeçalho do painel e no menu de contexto.
+* Se nenhum cooler for detectado ou se o cabo USB estiver desconectado, a propriedade `ActiveDevice` permanece nula (`null`) e o campo no painel fica **totalmente vazio**, garantindo total fidelidade ao hardware real do usuário.
+
+---
+
+## 8. Isolamento de Barramento e Desativação de Softwares Conflitantes
+
+Como o barramento USB HID opera com handles exclusivos (`FileAccess.ReadWrite` com compartilhamento restrito), a execução simultânea de softwares proprietários legados (como os serviços `tifSer`/`SendTemp.exe` da Rise Mode ou executáveis em segundo plano da DeepCool) gera colisões e timeouts de pacotes.
+
+O Vizzor disponibiliza uma rotina de encerramento e desativação com elevação de privilégios (`runas`), permitindo interromper com 1 clique todos os serviços e processos legados concorrentes.

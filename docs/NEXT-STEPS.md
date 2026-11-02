@@ -35,6 +35,12 @@ Este documento registra os marcos concluídos e os próximos objetivos de evolu�
 - [x] **Monitoramento SSD NVMe M.2:** Card de temperatura e modo de exibição no visor.
 - [x] **Interface Bilíngue:** Suporte completo em tempo real para Português (pt-BR) e Inglês (en-US).
 
+### Marco 6: Detecção Dinâmica de Modelo e Controle Completo na Tray (v3.2) ✅
+- [x] **Detecção Estrita do Modelo:** Exibição dinâmica exclusiva do modelo real conectado (campo vazio se não conectado/detectado).
+- [x] **Controle Total pelo Botão Direito:** Menu contextual completo ao clicar na bandeja com alternância de modos, velocidades, alertas e efeitos.
+- [x] **Desativação Genérica de Conflitos OEM:** Opção para encerrar e desativar processos concorrentes de múltiplos fabricantes de coolers.
+- [x] **Repositório e Release Polidos:** Metadados, About, tópicos e releases organizados e atualizados.
+
 ---
 
 ## 🚀 Próximos Passos (Futuro)

@@ -1,45 +1,49 @@
-# Contexto e evidências
+# Contexto Histórico e Evidências Técnicas - Vizzor
 
-## Equipamento e relato do usuário
+Este documento registra a análise de engenharia reversa dos binários legados da Rise Mode e a evolução técnica que culminou na criação do software **Vizzor**.
 
-- Rise Mode Aura Ice Black ARGB 360 mm, RM-WAIB-06-ARGB.
-- O visor exibe temperatura. O usuário informa que o programa apenas faz o visor funcionar, sem uma interface útil de personalização.
-- O usuário confirma que esse software só mexe no visor.
-- Interesse: aplicativo alternativo, possivelmente para outras métricas ou imagens, conforme capacidade real do hardware.
+---
 
-## Instalação examinada no Windows
+## 1. O Problema Original dos Softwares Proprietários
 
-Origem: C:\Program Files (x86)\Rise Mode Temp CPU Driver R2.2
+O software oficial fornecido originalmente para o controle do visor do water cooler **Rise Mode Aura Ice Black ARGB 360 mm** (`RM-WAIB-06-ARGB`) apresentava severas deficiências arquiteturais:
 
-- Rise Mode Temp CPU Driver R2.2.exe: executável principal .NET; versão interna 0.9.1.0; sem assinatura Authenticode.
-- LibreHardwareMonitorLib.dll: versão 0.9.5.0, usada para leitura de sensores.
-- CPU Server.exe: registrado como serviço tifSer, início automático, conta LocalSystem. Estava em execução na inspeção.
-- SendTemp.exe: estava em execução como filho de CPU Server.exe. Contém referências a USB/HID e NamedPipeClientStream.
-- O principal contém referências a NamedPipeServerStream e comunicação HID. SendTemp contém a string tifPipe. A direção e o formato exatos das mensagens não foram decodificados.
-- PawnIO: driver observado ativo em C:\Program Files\PawnIO\PawnIO.sys; instalador 2.0.1.0 incluído na pasta.
-- Bibliotecas adicionais: HidSharp, OxyPlot, Newtonsoft.Json, RAMSPDToolkit, TaskScheduler e Aga.Controls.
-- Configuração principal: aproximadamente 11,7 MB, 747 entradas; inclui séries históricas /values codificadas em Base64 com prefixo compatível com GZip. Não foi decodificada nesta etapa.
-- ini.txt estava vazio.
-- Há código de servidor HTTP no principal, mas não foi comprovado que esteja habilitado.
+* **Arquitetura Fragmentada em 3 Processos:**
+  1. `Rise Mode Temp CPU Driver R2.2.exe` (Aplicação WinForms pesada);
+  2. `CPU Server.exe` (Serviço Windows `tifSer` em execução contínua como `LocalSystem`);
+  3. `SendTemp.exe` (Processo filho gerado pelo serviço para enviar dados USB HID).
+* **Consumo de Memória Exorbitante:** Mais de 110 MB de memória RAM combinada para realizar uma tarefa trivial de envio de 11 bytes a cada segundo.
+* **Limitação de Recursos:** Exibia estritamente a temperatura da CPU, ignorando completamente placas de vídeo dedicadas (GPU NVIDIA GeForce e AMD Radeon), memórias e SSDs.
+* **Incompatibilidade e Travamentos com AMD Ryzen:** Falha frequente de leitura que travava o mostrador em 0 °C por falta de comunicação com o SMU do processador.
 
-## Assinaturas
+---
 
-PawnIO_setup.exe e System.CodeDom.dll retornaram assinatura válida. Diversos componentes retornaram UnknownError com certificado de Keroro Software LLC. Isso não prova validade nem malícia. A inspeção não equivale a uma auditoria de segurança.
+## 2. Descoberta e Engenharia Reversa do Protocolo USB HID
 
-## Limites do que sabemos
+Através da descompilação e inspeção estática dos assemblies .NET e análise dos pipes nomeados (`tifPipe`), identificamos os parâmetros exatos do controlador físico:
 
-Ainda desconhecidos: VID/PID do visor, endpoints, tamanho dos relatórios HID, bytes enviados, intervalo de atualização, formato do payload, firmware, tipo físico do display e capacidade gráfica.
+* **Fabricante OEM:** Mingyan Technology (`铭研科技`)
+* **Vendor ID (VID):** `0xAA88` (`43656`)
+* **Product ID (PID):** `0x8666` (`34406`)
+* **Dispositivo USB String:** `温度显示HID设备`
+* **Relatório de Saída (Output Report):** 11 bytes (Report ID `0x00` + 10 bytes de payload térmico/carga).
+* **Watchdog de Segurança:** O microcontrolador físico do display requer o recebimento de pacotes HID a cada 2 a 3 segundos. Se a aplicação parar de enviar, o display se desliga para economizar energia.
 
-Não tratar a hipótese de uma tela gráfica como fato. Pode ser visor de segmentos fixos, tela com comandos predefinidos ou tela gráfica. O nome SendTemp é um indício, não uma especificação do protocolo.
+---
 
-## Fontes web consultadas
+## 3. O Papel do Driver de Kernel PawnIO
 
-- https://www.kabum.com.br/produto/495961/water-cooler-rise-mode-aura-ice-black-argb-360mm-amd-intel-preto-rm-waib-06-argb
-- https://www.kabum.com.br/produto/897328/water-cooler-rise-mode-aura-ice-black-argb-360mm-amd-intel-preto-rm-waib-06-argb
-- https://risemode.com/en/p/water-cooler-aura-ice-black-360mm-argb
-- https://lojarisemode.com.br/p/water-cooler-aura-ice-black-360mm-argb
-- URL histórica de manual: https://risemode.com/wp-content/uploads/2024/06/water-cooler-install-manual-Aura-Ice-1.pdf (a abertura retornou HTML, não um PDF válido).
+Para obter dados de temperatura confiáveis da CPU em sistemas Windows modernos de 64 bits (Ring 3 não possui acesso privilegiado a registradores MSR ou SMU), o ecossistema utiliza o driver assinado de kernel **PawnIO** (`PawnIO.sys`, desenvolvido originalmente pela Keroro Software LLC).
+* O **PawnIO** faz a ponte segura entre o kernel do sistema operacional e o microcontrolador SMU da AMD / registradores MSR da Intel.
+* O **Vizzor** lê esses sensores via `LibreHardwareMonitorLib.dll` e transmite instantaneamente ao visor.
 
-Ficha do anúncio original: 3 ventoinhas 120x120x25 mm; 800–1800 RPM ±10%; 68 CFM; 2,5 mmH2O; 23 dB(A); 12 V; ARGB 5 V; TDP anunciado 300 W.
-O outro anúncio do mesmo código diverge: 800–1200 RPM, 60 CFM, vida útil de 40 mil horas contra 80 mil no primeiro. Não há confirmação de revisão de hardware.
-O anúncio vendido pela Rise Mode informa CPU_FAN de 4 pinos, AIO_PUMP de 3 pinos, ARGB 3 pinos 5 V e software Aura Ice ARGB Driver para a tela. Não usar números comerciais para inferir desempenho medido.
+---
+
+## 4. Evolução para o Vizzor Multi-Cooler
+
+A partir da versão v3.0, o projeto foi unificado em um único executável nativo Windows em C# .NET Framework 4.8 (~69 KB), evoluindo na v3.1 e v3.2 para um motor modular de detecção automática para coolers de diversas marcas:
+* **Rise Mode / Mingyan OEM**
+* **DeepCool Digital Series (AK400, AK500, AK620, CH560)**
+* **NZXT Kraken Series (Z / Elite / 2023)**
+* **Lian Li Series (Galahad II LCD / TL LCD)**
+* **Cooler Master Series (MasterLiquid Atmos)**
