@@ -12,6 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll">
+      <LogicalName>LibreHardwareMonitorLib.dll</LogicalName>
+    </EmbeddedResource>
     <Reference Include="LibreHardwareMonitorLib">
       <HintPath>..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll</HintPath>
     </Reference>

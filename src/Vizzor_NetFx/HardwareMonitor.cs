@@ -38,10 +38,25 @@ namespace Vizzor
         public string MotherboardName { get; set; }
         public float MotherboardTemp { get; set; }
         public float CpuFanRpm { get; set; }
+
+        // Diagnóstico de Driver de Kernel
+        public bool IsPawnIoNeeded { get; set; }
     }
 
     public sealed class HardwareMonitor : IDisposable
     {
+        public static bool IsPawnIoAvailable
+        {
+            get
+            {
+                try
+                {
+                    return File.Exists(@"C:\Program Files\PawnIO\PawnIO.sys") ||
+                           File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"PawnIO\PawnIO.sys"));
+                }
+                catch { return false; }
+            }
+        }
         [StructLayout(LayoutKind.Sequential)]
         private struct MEMORYSTATUSEX
         {
@@ -137,6 +152,11 @@ namespace Vizzor
             catch (Exception ex)
             {
                 try { File.AppendAllText(@"C:\Vizzor\vizzor.log", "[Error] GetMetrics: " + ex.Message + "\n"); } catch { }
+            }
+
+            if (metrics.CpuTemp == 0 && !IsPawnIoAvailable)
+            {
+                metrics.IsPawnIoNeeded = true;
             }
 
             return metrics;

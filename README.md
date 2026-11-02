@@ -92,13 +92,14 @@ Escolha a modalidade que melhor atende à sua necessidade:
 2. Extraia em qualquer pasta (ex: em um pendrive ou pasta Documentos);
 3. Dê dois cliques em `Vizzor.exe`. Ele rodará diretamente da pasta atual sem mexer nas pastas do sistema.
 
-### Opção 4: Compilação a partir do Código-Fonte
-O Vizzor utiliza exclusivamente o compilador C# nativo do Windows (`csc.exe`), sem precisar instalar SDKs pesados:
+### Opção 4: Compilação a partir do Código-Fonte (Executável Único com DLL Embutida)
+O Vizzor utiliza o compilador nativo do Windows (`csc.exe`), embutindo a biblioteca de hardware como recurso interno para gerar um executável 100% independente (Single-File):
 ```cmd
 git clone https://github.com/thegodKoDDa/vizzor.git
 cd vizzor\src\Vizzor_NetFx
-C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizzor.exe /r:..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll *.cs
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizzor.exe /resource:..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll,LibreHardwareMonitorLib.dll /r:..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll *.cs
 ```
+*O executável gerado `Vizzor.exe` funciona de forma autônoma em qualquer pasta sem exigir arquivos ou DLLs externas ao lado.*
 
 ---
 

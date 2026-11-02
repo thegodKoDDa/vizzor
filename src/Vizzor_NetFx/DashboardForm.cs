@@ -205,6 +205,10 @@ namespace Vizzor
             // CPU
             _lblCpuTemp = CreatePrimaryMetricLabel("CPU:", "48.0 °C (15%)", 24, _grpSensors);
             _lblCpuDetail = CreateSecondaryMetricLabel("Ryzen 5 5600X • 4.2 GHz • 65 W", 44, _grpSensors);
+            _lblCpuDetail.Click += (s, e) =>
+            {
+                try { System.Diagnostics.Process.Start("https://github.com/thegodKoDDa/vizzor/releases/latest"); } catch { }
+            };
 
             // GPU
             _lblGpuTemp = CreatePrimaryMetricLabel("GPU:", "44.0 °C (5%)", 68, _grpSensors);
@@ -502,6 +506,20 @@ namespace Vizzor
             if (!string.IsNullOrEmpty(cpuPower)) cpuExtra += " • " + cpuPower;
             if (!string.IsNullOrEmpty(cpuVolt)) cpuExtra += " • " + cpuVolt;
             _lblCpuDetail.Text = cpuExtra;
+
+            if (metrics.IsPawnIoNeeded)
+            {
+                _lblCpuDetail.Text = (Strings.CurrentLanguage == Language.PtBr)
+                    ? "⚠️ Sensor SMU requer driver PawnIO (Clique para obter)"
+                    : "⚠️ SMU sensor requires PawnIO driver (Click to get)";
+                _lblCpuDetail.ForeColor = Color.FromArgb(255, 185, 50);
+                _lblCpuDetail.Cursor = Cursors.Hand;
+            }
+            else
+            {
+                _lblCpuDetail.ForeColor = Color.FromArgb(130, 150, 175);
+                _lblCpuDetail.Cursor = Cursors.Default;
+            }
 
             // GPU
             string gpuHot = metrics.GpuHotspotTemp > 0 ? string.Format(" (Hotspot: {0:F0}°C)", metrics.GpuHotspotTemp) : "";
