@@ -12,6 +12,7 @@ namespace Vizzor
     {
         CpuTemp,
         GpuTemp,
+        SsdTemp,
         HighestTemp,
         Alternating,
         CpuLoad,
@@ -51,6 +52,7 @@ namespace Vizzor
         // Menus
         private ToolStripMenuItem _menuCpu;
         private ToolStripMenuItem _menuGpu;
+        private ToolStripMenuItem _menuSsd;
         private ToolStripMenuItem _menuMax;
         private ToolStripMenuItem _menuAlt;
         private ToolStripMenuItem _menuCpuLoad;
@@ -144,6 +146,7 @@ namespace Vizzor
             // 1. Modos de Exibicao
             _menuCpu = new ToolStripMenuItem("Temperatura da CPU", null, delegate { SetMode(DisplayMode.CpuTemp); });
             _menuGpu = new ToolStripMenuItem("Temperatura da GPU", null, delegate { SetMode(DisplayMode.GpuTemp); });
+            _menuSsd = new ToolStripMenuItem("Temperatura do SSD NVMe", null, delegate { SetMode(DisplayMode.SsdTemp); });
             _menuMax = new ToolStripMenuItem("O Mais Quente (CPU/GPU)", null, delegate { SetMode(DisplayMode.HighestTemp); });
             _menuAlt = new ToolStripMenuItem("Alternar (CPU e GPU)", null, delegate { SetMode(DisplayMode.Alternating); });
             _menuClock = new ToolStripMenuItem("Modo Relógio (Minutos)", null, delegate { SetMode(DisplayMode.ClockMinutes); });
@@ -153,7 +156,7 @@ namespace Vizzor
 
             var displayMenu = new ToolStripMenuItem("Modo de Exibição");
             displayMenu.DropDownItems.AddRange(new ToolStripItem[] {
-                _menuCpu, _menuGpu, _menuMax, _menuAlt, _menuClock,
+                _menuCpu, _menuGpu, _menuSsd, _menuMax, _menuAlt, _menuClock,
                 new ToolStripSeparator(),
                 _menuCpuLoad, _menuRamLoad,
                 new ToolStripSeparator(),
@@ -245,6 +248,7 @@ namespace Vizzor
         {
             _menuCpu.Checked = _currentMode == DisplayMode.CpuTemp;
             _menuGpu.Checked = _currentMode == DisplayMode.GpuTemp;
+            _menuSsd.Checked = _currentMode == DisplayMode.SsdTemp;
             _menuMax.Checked = _currentMode == DisplayMode.HighestTemp;
             _menuAlt.Checked = _currentMode == DisplayMode.Alternating;
             _menuClock.Checked = _currentMode == DisplayMode.ClockMinutes;
@@ -289,40 +293,51 @@ namespace Vizzor
             byte displayValue = 0;
             bool isTempDisplay = true;
 
-            switch (_currentMode)
+            // Se o teste manual (Slider) estiver ativo no Dashboard, prioriza o valor do Slider!
+            if (_dashboardForm != null && _dashboardForm.IsManualTestActive)
             {
-                case DisplayMode.CpuTemp:
-                    displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuTemp)));
-                    break;
-                case DisplayMode.GpuTemp:
-                    displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.GpuTemp)));
-                    break;
-                case DisplayMode.HighestTemp:
-                    float highest = Math.Max(metrics.CpuTemp, metrics.GpuTemp);
-                    displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(highest)));
-                    break;
-                case DisplayMode.Alternating:
-                    _alternateCounter += (_updateInterval / 1000 > 0 ? _updateInterval / 1000 : 1);
-                    if (_alternateCounter >= _alternateSeconds)
-                    {
-                        _alternateCounter = 0;
-                        _alternateShowCpu = !_alternateShowCpu;
-                    }
-                    float val = _alternateShowCpu ? metrics.CpuTemp : metrics.GpuTemp;
-                    displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(val)));
-                    break;
-                case DisplayMode.ClockMinutes:
-                    displayValue = (byte)DateTime.Now.Minute;
-                    isTempDisplay = false;
-                    break;
-                case DisplayMode.CpuLoad:
-                    displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuLoad)));
-                    isTempDisplay = false;
-                    break;
-                case DisplayMode.RamLoad:
-                    displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.RamLoad)));
-                    isTempDisplay = false;
-                    break;
+                displayValue = _dashboardForm.ManualTestValue;
+            }
+            else
+            {
+                switch (_currentMode)
+                {
+                    case DisplayMode.CpuTemp:
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuTemp)));
+                        break;
+                    case DisplayMode.GpuTemp:
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.GpuTemp)));
+                        break;
+                    case DisplayMode.SsdTemp:
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.SsdTemp > 0 ? metrics.SsdTemp : 38f)));
+                        break;
+                    case DisplayMode.HighestTemp:
+                        float highest = Math.Max(metrics.CpuTemp, metrics.GpuTemp);
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(highest)));
+                        break;
+                    case DisplayMode.Alternating:
+                        _alternateCounter += (_updateInterval / 1000 > 0 ? _updateInterval / 1000 : 1);
+                        if (_alternateCounter >= _alternateSeconds)
+                        {
+                            _alternateCounter = 0;
+                            _alternateShowCpu = !_alternateShowCpu;
+                        }
+                        float val = _alternateShowCpu ? metrics.CpuTemp : metrics.GpuTemp;
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(val)));
+                        break;
+                    case DisplayMode.ClockMinutes:
+                        displayValue = (byte)DateTime.Now.Minute;
+                        isTempDisplay = false;
+                        break;
+                    case DisplayMode.CpuLoad:
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuLoad)));
+                        isTempDisplay = false;
+                        break;
+                    case DisplayMode.RamLoad:
+                        displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.RamLoad)));
+                        isTempDisplay = false;
+                        break;
+                }
             }
 
             // Efeito Alerta Visual no Gabinete: se temp >= 85°C e o efeito estiver ativo, pisca o visor físico

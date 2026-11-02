@@ -25,7 +25,10 @@ namespace Vizzor
             {
                 new RiseModeAuraIceDriver(),
                 new MingyanGenericDriver(),
-                new DeepCoolDigitalDriver()
+                new DeepCoolDigitalDriver(),
+                new NzxtKrakenDriver(),
+                new LianLiDriver(),
+                new CoolerMasterDriver()
             };
 
             AutoDetect();

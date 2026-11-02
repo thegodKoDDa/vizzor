@@ -9,6 +9,7 @@ namespace Vizzor
     {
         public float CpuTemp { get; set; }
         public float GpuTemp { get; set; }
+        public float SsdTemp { get; set; }
         public float CpuLoad { get; set; }
         public float GpuLoad { get; set; }
         public float RamLoad { get; set; }
@@ -43,6 +44,7 @@ namespace Vizzor
             {
                 IsCpuEnabled = true,
                 IsGpuEnabled = true,
+                IsStorageEnabled = true,
                 IsMemoryEnabled = false,
                 IsMotherboardEnabled = false
             };
@@ -91,6 +93,10 @@ namespace Vizzor
                                  hardware.HardwareType == HardwareType.GpuIntel)
                         {
                             ExtractGpuMetrics(hardware, metrics);
+                        }
+                        else if (hardware.HardwareType == HardwareType.Storage)
+                        {
+                            ExtractStorageMetrics(hardware, metrics);
                         }
                     }
                     catch { }
@@ -171,6 +177,21 @@ namespace Vizzor
                     if (sensor.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0 || metrics.GpuLoad == 0)
                     {
                         metrics.GpuLoad = sensor.Value.Value;
+                    }
+                }
+            }
+        }
+
+        private static void ExtractStorageMetrics(IHardware hardware, HardwareMetrics metrics)
+        {
+            foreach (var sensor in hardware.Sensors)
+            {
+                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue)
+                {
+                    float val = sensor.Value.Value;
+                    if (val > 0 && (val > metrics.SsdTemp || metrics.SsdTemp == 0))
+                    {
+                        metrics.SsdTemp = val;
                     }
                 }
             }

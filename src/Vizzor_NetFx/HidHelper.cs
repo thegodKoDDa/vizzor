@@ -42,8 +42,110 @@ namespace Vizzor
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
 
+        [DllImport("hid.dll", SetLastError = true)]
+        public static extern bool HidD_GetManufacturerString(IntPtr HidDeviceObject, IntPtr Buffer, uint BufferLength);
+
+        [DllImport("hid.dll", SetLastError = true)]
+        public static extern bool HidD_GetProductString(IntPtr HidDeviceObject, IntPtr Buffer, uint BufferLength);
+
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+        public static extern IntPtr CreateFile(
+            string lpFileName,
+            uint dwDesiredAccess,
+            uint dwShareMode,
+            IntPtr lpSecurityAttributes,
+            uint dwCreationDisposition,
+            uint dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
+
+        public sealed class UsbDeviceInfo
+        {
+            public string DevicePath { get; set; }
+            public string Vid { get; set; }
+            public string Pid { get; set; }
+            public string Manufacturer { get; set; }
+            public string Product { get; set; }
+            public bool IsSupported { get; set; }
+        }
+
+        public static System.Collections.Generic.List<UsbDeviceInfo> ScanAllHidDevices()
+        {
+            var list = new System.Collections.Generic.List<UsbDeviceInfo>();
+            Guid hidGuid = Guid.Empty;
+            HidD_GetHidGuid(ref hidGuid);
+
+            IntPtr devInfo = SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, IntPtr.Zero, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+            if (devInfo == INVALID_HANDLE_VALUE) return list;
+
+            try
+            {
+                SP_DEVICE_INTERFACE_DATA ifData = new SP_DEVICE_INTERFACE_DATA();
+                ifData.cbSize = Marshal.SizeOf(typeof(SP_DEVICE_INTERFACE_DATA));
+
+                for (uint i = 0; i < 128; i++)
+                {
+                    if (!SetupDiEnumDeviceInterfaces(devInfo, IntPtr.Zero, ref hidGuid, i, ref ifData))
+                        break;
+
+                    uint requiredSize = 0;
+                    SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, IntPtr.Zero, 0, out requiredSize, IntPtr.Zero);
+                    if (requiredSize == 0) continue;
+
+                    IntPtr detailBuffer = Marshal.AllocHGlobal((int)requiredSize);
+                    try
+                    {
+                        Marshal.WriteInt32(detailBuffer, IntPtr.Size == 8 ? 8 : 4 + Marshal.SystemDefaultCharSize);
+
+                        if (SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, detailBuffer, requiredSize, out requiredSize, IntPtr.Zero))
+                        {
+                            IntPtr pDevicePath = new IntPtr(detailBuffer.ToInt64() + 4);
+                            string path = Marshal.PtrToStringAuto(pDevicePath);
+
+                            if (!string.IsNullOrEmpty(path))
+                            {
+                                string lower = path.ToLowerInvariant();
+                                int vidIdx = lower.IndexOf("vid_");
+                                int pidIdx = lower.IndexOf("pid_");
+
+                                if (vidIdx >= 0 && pidIdx >= 0)
+                                {
+                                    string vid = lower.Substring(vidIdx + 4, 4);
+                                    string pid = lower.Substring(pidIdx + 4, 4);
+
+                                    var info = new UsbDeviceInfo
+                                    {
+                                        DevicePath = path,
+                                        Vid = "0x" + vid.ToUpper(),
+                                        Pid = "0x" + pid.ToUpper(),
+                                        Manufacturer = "Desconhecido",
+                                        Product = "Dispositivo HID USB",
+                                        IsSupported = (vid == "aa88" || vid == "3633" || vid == "1e71" || vid == "0cf2" || vid == "2516")
+                                    };
+
+                                    if (vid == "aa88") { info.Product = "Rise Mode Aura Ice / Mingyan Display"; info.Manufacturer = "Mingyan Tech"; }
+                                    else if (vid == "3633") { info.Product = "DeepCool Digital Display"; info.Manufacturer = "DeepCool"; }
+                                    else if (vid == "1e71") { info.Product = "NZXT Kraken Display"; info.Manufacturer = "NZXT"; }
+                                    else if (vid == "0cf2") { info.Product = "Lian Li Display"; info.Manufacturer = "Lian Li"; }
+                                    else if (vid == "2516") { info.Product = "Cooler Master Display"; info.Manufacturer = "Cooler Master"; }
+
+                                    list.Add(info);
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(detailBuffer);
+                    }
+                }
+            }
+            finally
+            {
+                SetupDiDestroyDeviceInfoList(devInfo);
+            }
+
+            return list;
+        }
 
         public static string FindDevicePath(ushort vid, ushort pid)
         {

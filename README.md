@@ -19,14 +19,16 @@ O Vizzor possui um motor de **Detecção Automática (Auto-Detect)** que escanei
 | :--- | :--- | :---: | :---: |
 | **Rise Mode** | Aura Ice Black ARGB 360 mm / 240 mm (`RM-WAIB-06-ARGB`) | USB HID (`0xAA88:0x8666`) | ✅ Total |
 | **SuperFrame / Alseye** | Coolers Digitais OEM Mingyan | USB HID (`0xAA88:0x8667`, `0x8668`) | ✅ Total |
-| **DeepCool** | AK400 Digital, AK620 Digital, LS520 Digital, LS720 Digital | USB HID (`0x3633:0x0001`, `0x0002`) | ✅ Suportado |
+| **DeepCool** | AK400 Digital, AK500 Digital, AK620 Digital, CH560 Digital | USB HID (`0x3633:0x0001`, `0x0002`) | ✅ Suportado |
+| **NZXT** | Kraken Z53/Z63/Z73, Kraken Elite 240/280/360, Kraken 2023 | USB HID (`0x1E71:0x2007`, `0x3008`, `0x2001`) | ✅ Suportado |
+| **Lian Li** | Galahad II LCD, UNI FAN TL LCD | USB HID (`0x0CF2:0xA102`) | ✅ Suportado |
+| **Cooler Master** | MasterLiquid 360 Atmos / LCD Series | USB HID (`0x2516:0x1001`) | ✅ Suportado |
 
-### 💡 Tem outro modelo de water cooler com visor?
-Se você tem outro water cooler com display digital (de qualquer marca):
-1. Abra o **Gerenciador de Dispositivos** do Windows -> Dispositivos de Interface Humana (HID);
-2. Encontre o cooler, clique com o botão direito -> **Propriedades** -> aba **Detalhes** -> selecione **IDs de Hardware**;
-3. Copie o `VID` e `PID` (ex: `VID_XXXX&PID_YYYY`);
-4. Abra uma **[Issue no GitHub](https://github.com/thegodKoDDa/vizzor/issues)** informando o modelo do seu cooler! Nós adicionamos o suporte oficial para o seu hardware.
+### 🔍 Scanner e Diagnóstico USB Integrado
+Não sabe qual é o seu cooler ou quer adicionar suporte a um modelo novo?
+1. Abra o Painel do Vizzor e clique em **`🔍 Diagnóstico USB`** (ou **`USB Diagnostics`**);
+2. O Vizzor lista automaticamente todos os dispositivos USB HID conectados, fabricante e IDs de hardware;
+3. Clique em **`📋 Copiar Relatório`** e cole direto em uma [Issue no GitHub](https://github.com/thegodKoDDa/vizzor/issues) para adicionarmos suporte oficial instantaneamente!
 
 ---
 
@@ -97,8 +99,11 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizz
 ### Painel de Controle (Dashboard Dark Mode)
 Dê **dois cliques** no ícone do Vizzor na barra de tarefas (ou clique com o botão direito e selecione *"Abrir Painel de Controle..."*):
 * Réplica visual estilizada do cabeçote do water cooler refletindo a temperatura em tempo real;
-* Telemetria ao vivo de CPU, GPU e uso de Memória RAM;
-* Troca instantânea de modos de exibição pelo painel.
+* **Suporte Bilíngue:** Botão no topo para alternar instantaneamente entre **🇧🇷 Português** e **🇺🇸 English**;
+* **Telemetria Completa:** Monitoramento ao vivo de CPU, GPU (NVIDIA/AMD), Memória RAM e **SSD NVMe M.2**;
+* **Modos de Exibição:** Escolha entre CPU, GPU, SSD NVMe, Mais Quente, Alternado e Relógio;
+* **🎛️ Teste Manual Interativo:** Slider de 0 a 99 para testar cada segmento e dígito do display físico em tempo real;
+* **🔍 Diagnóstico USB Integrado:** Scanner de periféricos HID com cópia de relatório para envio de novos hardwares.
 
 ### Ícone Dinâmico na Barra de Tarefas
 O ícone do Vizzor desenha o número da temperatura ao vivo ao lado do relógio do Windows com cores térmicas adaptativas:
