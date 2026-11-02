@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -13,7 +14,8 @@ namespace Vizzor
         HighestTemp,
         Alternating,
         CpuLoad,
-        RamLoad
+        RamLoad,
+        StealthOff
     }
 
     public sealed class TrayApplicationContext : ApplicationContext
@@ -22,22 +24,43 @@ namespace Vizzor
         private const string RunRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
         private const string AppRegistryKey = @"Software\Vizzor";
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool DestroyIcon(IntPtr hIcon);
+
         private readonly NotifyIcon _notifyIcon;
         private readonly Timer _updateTimer;
         private readonly HardwareMonitor _hardwareMonitor;
         private readonly DisplayController _displayController;
 
         private DisplayMode _currentMode = DisplayMode.CpuTemp;
+        private int _updateInterval = 1000;
+        private int _alternateSeconds = 5;
+        private bool _highTempAlertEnabled = true;
+
         private int _alternateCounter = 0;
         private bool _alternateShowCpu = true;
         private int _logCycles = 0;
+        private DateTime _lastAlertTime = DateTime.MinValue;
+        private IntPtr _lastHIcon = IntPtr.Zero;
 
+        // Menus
         private ToolStripMenuItem _menuCpu;
         private ToolStripMenuItem _menuGpu;
         private ToolStripMenuItem _menuMax;
         private ToolStripMenuItem _menuAlt;
         private ToolStripMenuItem _menuCpuLoad;
         private ToolStripMenuItem _menuRamLoad;
+        private ToolStripMenuItem _menuStealth;
+
+        private ToolStripMenuItem _menuInt500;
+        private ToolStripMenuItem _menuInt1000;
+        private ToolStripMenuItem _menuInt2000;
+
+        private ToolStripMenuItem _menuAlt3;
+        private ToolStripMenuItem _menuAlt5;
+        private ToolStripMenuItem _menuAlt10;
+
+        private ToolStripMenuItem _menuAlert;
         private ToolStripMenuItem _menuAutostart;
 
         public TrayApplicationContext()
@@ -55,7 +78,7 @@ namespace Vizzor
                 ContextMenuStrip = CreateContextMenu()
             };
 
-            _updateTimer = new Timer { Interval = 1000 };
+            _updateTimer = new Timer { Interval = _updateInterval };
             _updateTimer.Tick += OnUpdateTick;
             _updateTimer.Start();
 
@@ -66,7 +89,7 @@ namespace Vizzor
         {
             var menu = new ContextMenuStrip();
 
-            var titleItem = new ToolStripMenuItem("Vizzor (Rise Mode Aura Ice)")
+            var titleItem = new ToolStripMenuItem("Vizzor v2.0 (Rise Mode Aura Ice)")
             {
                 Enabled = false,
                 Font = new Font(Control.DefaultFont, FontStyle.Bold)
@@ -74,21 +97,53 @@ namespace Vizzor
             menu.Items.Add(titleItem);
             menu.Items.Add(new ToolStripSeparator());
 
-            _menuCpu = new ToolStripMenuItem("Exibir: Temperatura da CPU", null, delegate { SetMode(DisplayMode.CpuTemp); });
-            _menuGpu = new ToolStripMenuItem("Exibir: Temperatura da GPU", null, delegate { SetMode(DisplayMode.GpuTemp); });
-            _menuMax = new ToolStripMenuItem("Exibir: O Mais Quente (CPU/GPU)", null, delegate { SetMode(DisplayMode.HighestTemp); });
-            _menuAlt = new ToolStripMenuItem("Exibir: Alternar a cada 5s (CPU / GPU)", null, delegate { SetMode(DisplayMode.Alternating); });
-            _menuCpuLoad = new ToolStripMenuItem("Exibir: Uso da CPU (%)", null, delegate { SetMode(DisplayMode.CpuLoad); });
-            _menuRamLoad = new ToolStripMenuItem("Exibir: Uso de Memória RAM (%)", null, delegate { SetMode(DisplayMode.RamLoad); });
+            // 1. Modos de Exibição
+            _menuCpu = new ToolStripMenuItem("Temperatura da CPU", null, delegate { SetMode(DisplayMode.CpuTemp); });
+            _menuGpu = new ToolStripMenuItem("Temperatura da GPU", null, delegate { SetMode(DisplayMode.GpuTemp); });
+            _menuMax = new ToolStripMenuItem("O Mais Quente (CPU/GPU)", null, delegate { SetMode(DisplayMode.HighestTemp); });
+            _menuAlt = new ToolStripMenuItem("Alternar (CPU e GPU)", null, delegate { SetMode(DisplayMode.Alternating); });
+            _menuCpuLoad = new ToolStripMenuItem("Uso da CPU (%)", null, delegate { SetMode(DisplayMode.CpuLoad); });
+            _menuRamLoad = new ToolStripMenuItem("Uso de Memória RAM (%)", null, delegate { SetMode(DisplayMode.RamLoad); });
+            _menuStealth = new ToolStripMenuItem("Modo Stealth (Apagar Visor)", null, delegate { SetMode(DisplayMode.StealthOff); });
 
-            menu.Items.Add(_menuCpu);
-            menu.Items.Add(_menuGpu);
-            menu.Items.Add(_menuMax);
-            menu.Items.Add(_menuAlt);
-            menu.Items.Add(_menuCpuLoad);
-            menu.Items.Add(_menuRamLoad);
+            var displayMenu = new ToolStripMenuItem("Modo de Exibição");
+            displayMenu.DropDownItems.AddRange(new ToolStripItem[] {
+                _menuCpu, _menuGpu, _menuMax, _menuAlt,
+                new ToolStripSeparator(),
+                _menuCpuLoad, _menuRamLoad,
+                new ToolStripSeparator(),
+                _menuStealth
+            });
+            menu.Items.Add(displayMenu);
+
+            // 2. Intervalo de Atualização
+            _menuInt500 = new ToolStripMenuItem("Rápido (500 ms)", null, delegate { SetInterval(500); });
+            _menuInt1000 = new ToolStripMenuItem("Normal (1 segundo)", null, delegate { SetInterval(1000); });
+            _menuInt2000 = new ToolStripMenuItem("Econômico (2 segundos)", null, delegate { SetInterval(2000); });
+
+            var intervalMenu = new ToolStripMenuItem("Velocidade de Atualização");
+            intervalMenu.DropDownItems.AddRange(new ToolStripItem[] { _menuInt500, _menuInt1000, _menuInt2000 });
+            menu.Items.Add(intervalMenu);
+
+            // 3. Tempo de Alternância
+            _menuAlt3 = new ToolStripMenuItem("A cada 3 segundos", null, delegate { SetAlternateSeconds(3); });
+            _menuAlt5 = new ToolStripMenuItem("A cada 5 segundos", null, delegate { SetAlternateSeconds(5); });
+            _menuAlt10 = new ToolStripMenuItem("A cada 10 segundos", null, delegate { SetAlternateSeconds(10); });
+
+            var altMenu = new ToolStripMenuItem("Tempo de Alternância");
+            altMenu.DropDownItems.AddRange(new ToolStripItem[] { _menuAlt3, _menuAlt5, _menuAlt10 });
+            menu.Items.Add(altMenu);
 
             menu.Items.Add(new ToolStripSeparator());
+
+            // 4. Opções do Sistema
+            _menuAlert = new ToolStripMenuItem("Alerta de Alta Temperatura (> 85°C)", null, delegate {
+                _highTempAlertEnabled = !_highTempAlertEnabled;
+                _menuAlert.Checked = _highTempAlertEnabled;
+                SaveSettings();
+            });
+            _menuAlert.Checked = _highTempAlertEnabled;
+            menu.Items.Add(_menuAlert);
 
             _menuAutostart = new ToolStripMenuItem("Iniciar com o Windows", null, OnToggleAutostart);
             _menuAutostart.Checked = IsAutostartEnabled();
@@ -96,7 +151,12 @@ namespace Vizzor
 
             menu.Items.Add(new ToolStripSeparator());
 
-            var exitItem = new ToolStripMenuItem("Sair", null, OnExit);
+            var cleanOldItem = new ToolStripMenuItem("Desativar Software Antigo da Rise Mode", null, OnDisableOldSoftware);
+            menu.Items.Add(cleanOldItem);
+
+            menu.Items.Add(new ToolStripSeparator());
+
+            var exitItem = new ToolStripMenuItem("Sair do Vizzor", null, OnExit);
             menu.Items.Add(exitItem);
 
             UpdateMenuChecks();
@@ -112,6 +172,22 @@ namespace Vizzor
             SaveSettings();
         }
 
+        private void SetInterval(int ms)
+        {
+            _updateInterval = ms;
+            _updateTimer.Interval = _updateInterval;
+            UpdateMenuChecks();
+            SaveSettings();
+        }
+
+        private void SetAlternateSeconds(int sec)
+        {
+            _alternateSeconds = sec;
+            _alternateCounter = 0;
+            UpdateMenuChecks();
+            SaveSettings();
+        }
+
         private void UpdateMenuChecks()
         {
             _menuCpu.Checked = _currentMode == DisplayMode.CpuTemp;
@@ -120,12 +196,43 @@ namespace Vizzor
             _menuAlt.Checked = _currentMode == DisplayMode.Alternating;
             _menuCpuLoad.Checked = _currentMode == DisplayMode.CpuLoad;
             _menuRamLoad.Checked = _currentMode == DisplayMode.RamLoad;
+            _menuStealth.Checked = _currentMode == DisplayMode.StealthOff;
+
+            _menuInt500.Checked = _updateInterval == 500;
+            _menuInt1000.Checked = _updateInterval == 1000;
+            _menuInt2000.Checked = _updateInterval == 2000;
+
+            _menuAlt3.Checked = _alternateSeconds == 3;
+            _menuAlt5.Checked = _alternateSeconds == 5;
+            _menuAlt10.Checked = _alternateSeconds == 10;
         }
 
         private void OnUpdateTick(object sender, EventArgs e)
         {
             HardwareMetrics metrics = _hardwareMonitor.GetMetrics();
+
+            // Verificação de Alerta de Temperatura
+            if (_highTempAlertEnabled && (DateTime.Now - _lastAlertTime).TotalSeconds > 60)
+            {
+                if (metrics.CpuTemp >= 85 || metrics.GpuTemp >= 85)
+                {
+                    _lastAlertTime = DateTime.Now;
+                    string component = metrics.CpuTemp >= 85 ? "CPU" : "GPU";
+                    float temp = Math.Max(metrics.CpuTemp, metrics.GpuTemp);
+                    _notifyIcon.ShowBalloonTip(3000, "Vizzor - Alerta de Temperatura", string.Format("Atenção: {0} atingiu {1:F0}°C!", component, temp), ToolTipIcon.Warning);
+                }
+            }
+
+            // Modo Stealth: simplesmente não envia pacotes para o visor apagar por watchdog
+            if (_currentMode == DisplayMode.StealthOff)
+            {
+                UpdateDynamicTrayIcon(0, false);
+                _notifyIcon.Text = string.Format("Vizzor (Visor Apagado)\nCPU: {0:F0}°C | GPU: {1:F0}°C", metrics.CpuTemp, metrics.GpuTemp);
+                return;
+            }
+
             byte displayValue = 0;
+            bool isTempDisplay = true;
 
             switch (_currentMode)
             {
@@ -140,8 +247,8 @@ namespace Vizzor
                     displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(highest)));
                     break;
                 case DisplayMode.Alternating:
-                    _alternateCounter++;
-                    if (_alternateCounter >= 5)
+                    _alternateCounter += (_updateInterval / 1000 > 0 ? _updateInterval / 1000 : 1);
+                    if (_alternateCounter >= _alternateSeconds)
                     {
                         _alternateCounter = 0;
                         _alternateShowCpu = !_alternateShowCpu;
@@ -151,9 +258,11 @@ namespace Vizzor
                     break;
                 case DisplayMode.CpuLoad:
                     displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuLoad)));
+                    isTempDisplay = false;
                     break;
                 case DisplayMode.RamLoad:
                     displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.RamLoad)));
+                    isTempDisplay = false;
                     break;
             }
 
@@ -166,14 +275,18 @@ namespace Vizzor
 
             bool sent = _displayController.SendPacket(cpuTemp, gpuTemp, cpuLoad, ramLoad, mbTemp, gpuLoad);
 
-            if (_logCycles < 10)
+            // Atualiza o Ícone Dinâmico da Bandeja com o valor ao vivo
+            UpdateDynamicTrayIcon(displayValue, isTempDisplay);
+
+            // Log dos primeiros ciclos
+            if (_logCycles < 5)
             {
                 _logCycles++;
                 try { File.AppendAllText(@"C:\Vizzor\vizzor.log", string.Format("[Tick {0}] CPU={1:F1}C, GPU={2:F1}C, DisplayVal={3}, Sent={4}\n", _logCycles, metrics.CpuTemp, metrics.GpuTemp, displayValue, sent)); } catch { }
             }
 
             string status = sent ? "Conectado" : "Buscando visor...";
-            string tooltip = string.Format("Vizzor ({0})\nCPU: {1:F0}°C ({2:F0}%)\nGPU: {3:F0}°C ({4:F0}%)\nVisor: {5}", status, metrics.CpuTemp, metrics.CpuLoad, metrics.GpuTemp, metrics.GpuLoad, displayValue);
+            string tooltip = string.Format("Vizzor ({0})\nCPU: {1:F0}°C ({2:F0}%)\nGPU: {3:F0}°C ({4:F0}%)\nRAM: {5:F0}%\nVisor: {6}", status, metrics.CpuTemp, metrics.CpuLoad, metrics.GpuTemp, metrics.GpuLoad, metrics.RamLoad, displayValue);
 
             if (tooltip.Length >= 64)
             {
@@ -182,6 +295,52 @@ namespace Vizzor
             }
 
             _notifyIcon.Text = tooltip;
+        }
+
+        private void UpdateDynamicTrayIcon(int value, bool isTemp)
+        {
+            try
+            {
+                using (var bmp = new Bitmap(16, 16))
+                {
+                    using (var g = Graphics.FromImage(bmp))
+                    {
+                        g.Clear(Color.Transparent);
+
+                        Color textColor;
+                        if (isTemp)
+                        {
+                            if (value >= 80) textColor = Color.FromArgb(255, 60, 60);       // Vermelho
+                            else if (value >= 65) textColor = Color.FromArgb(255, 175, 40);   // Laranja
+                            else textColor = Color.FromArgb(0, 220, 255);                     // Ciano
+                        }
+                        else
+                        {
+                            textColor = Color.FromArgb(80, 230, 120); // Verde para carga/RAM
+                        }
+
+                        string text = value > 99 ? "99" : (value == 0 ? "V" : value.ToString());
+                        using (var font = new Font("Segoe UI", 9.5f, FontStyle.Bold, GraphicsUnit.Pixel))
+                        using (var brush = new SolidBrush(textColor))
+                        {
+                            var size = g.MeasureString(text, font);
+                            float x = (16f - size.Width) / 2f + 0.5f;
+                            float y = (16f - size.Height) / 2f + 1f;
+                            g.DrawString(text, font, brush, new PointF(x, y));
+                        }
+                    }
+
+                    IntPtr hIcon = bmp.GetHicon();
+                    _notifyIcon.Icon = Icon.FromHandle(hIcon);
+
+                    if (_lastHIcon != IntPtr.Zero)
+                    {
+                        DestroyIcon(_lastHIcon);
+                    }
+                    _lastHIcon = hIcon;
+                }
+            }
+            catch { }
         }
 
         private void OnToggleAutostart(object sender, EventArgs e)
@@ -229,6 +388,29 @@ namespace Vizzor
             }
         }
 
+        private void OnDisableOldSoftware(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Deseja desativar o servico e a inicializacao automatica do software antigo da Rise Mode?", "Vizzor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = "/c net stop tifSer 2>nul & sc config tifSer start=disabled 2>nul & taskkill /F /IM \"SendTemp.exe\" 2>nul & taskkill /F /IM \"Rise Mode Temp CPU Driver R2.2.exe\" 2>nul",
+                        Verb = "runas",
+                        CreateNoWindow = true,
+                        WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+                    });
+                    MessageBox.Show("Software antigo desativado com sucesso!", "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Falha ao desativar: " + ex.Message, "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
         private void LoadSettings()
         {
             try
@@ -237,11 +419,17 @@ namespace Vizzor
                 {
                     if (key != null)
                     {
-                        object val = key.GetValue("DisplayMode");
-                        if (val is int)
-                        {
-                            _currentMode = (DisplayMode)(int)val;
-                        }
+                        object modeVal = key.GetValue("DisplayMode");
+                        if (modeVal is int) _currentMode = (DisplayMode)(int)modeVal;
+
+                        object intVal = key.GetValue("UpdateInterval");
+                        if (intVal is int) _updateInterval = (int)intVal;
+
+                        object altVal = key.GetValue("AlternateSeconds");
+                        if (altVal is int) _alternateSeconds = (int)altVal;
+
+                        object alertVal = key.GetValue("HighTempAlert");
+                        if (alertVal is int) _highTempAlertEnabled = ((int)alertVal) == 1;
                     }
                 }
             }
@@ -257,6 +445,9 @@ namespace Vizzor
                     if (key != null)
                     {
                         key.SetValue("DisplayMode", (int)_currentMode);
+                        key.SetValue("UpdateInterval", _updateInterval);
+                        key.SetValue("AlternateSeconds", _alternateSeconds);
+                        key.SetValue("HighTempAlert", _highTempAlertEnabled ? 1 : 0);
                     }
                 }
             }
@@ -287,6 +478,11 @@ namespace Vizzor
             _notifyIcon.Visible = false;
             _displayController.Dispose();
             _hardwareMonitor.Dispose();
+            if (_lastHIcon != IntPtr.Zero)
+            {
+                DestroyIcon(_lastHIcon);
+                _lastHIcon = IntPtr.Zero;
+            }
             _notifyIcon.Dispose();
             ExitThread();
         }
