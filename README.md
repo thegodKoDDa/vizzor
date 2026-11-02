@@ -105,25 +105,28 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizz
 ## 🖥️ Recursos e Interface
 
 ```text
-+--------------------------------------------------------------+
-| 🧊 VIZZOR - Hardware Display Controller           [🇧🇷 PT / 🇺🇸 EN] |
-| Dispositivo: [Modelo Detectado do Usuário]                   |
-+--------------------------------------------------------------+
-|   [ REPLICA VISOR ]    |  TELEMETRIA AO VIVO                 |
-|       ( 46°C )         |  • CPU (Ryzen 5 5600X):  46.4°C (22%)|
-|     Visual Circular    |  • GPU (RTX 5060 Ti):    42.0°C (12%)|
-|                        |  • RAM:                  48.1%       |
-|                        |  • SSD (NVMe M.2):       38.0°C      |
-+--------------------------------------------------------------+
-| MODOS DE EXIBIÇÃO NO VISOR FÍSICO:                           |
-| (•) CPU Temp   ( ) GPU Temp   ( ) SSD NVMe   ( ) Mais Quente |
-| ( ) Alternado (5s)            ( ) Relógio (Minutos)          |
-+--------------------------------------------------------------+
-| [ ] 🎛️ Testar Valor Manual no Visor (0 a 99)                  |
-|     [=====================O=============] -> Forçar no display|
-+--------------------------------------------------------------+
-| [🔍 Diagnóstico USB...]                 [Minimizar para Tray]|
-+--------------------------------------------------------------+
++--------------------------------------------------------------------+
+| 🧊 VIZZOR - Hardware Display & PC Monitor          [🇧🇷 PT / 🇺🇸 EN] |
+| Dispositivo: [Modelo do Cooler] ou 🖥️ Modo Standalone (PC Telemetry)|
++--------------------------------------------------------------------+
+|   [ REPLICA VISOR ]    |  TELEMETRIA EXPANDIDA EM TEMPO REAL       |
+|       ( 48°C )         |  • CPU: Ryzen 7 7800X3D - 48.0°C (18%)    |
+|    Mostrador Digital   |    Clock: 4.85 GHz | 72 W | 1.25 V        |
+|                        |  • GPU: RTX 4070 SUPER - 44.0°C (5%)      |
+|                        |    Hotspot: 52°C | VRAM: 6.2/12.0 GB | 185W |
+|                        |  • RAM: 14.8 / 32.0 GB (46%)              |
+|                        |  • SSD: Samsung 980 PRO - 38.0°C          |
+|                        |  • Placa-Mãe & Fans: 33°C | Fan: 1100 RPM |
++--------------------------------------------------------------------+
+| MODOS DE EXIBIÇÃO NO VISOR FÍSICO / BANDEJA:                       |
+| (•) CPU Temp   ( ) GPU Temp   ( ) SSD NVMe   ( ) Mais Quente (Hot) |
+| ( ) Carga CPU  ( ) Carga RAM  ( ) Alternado  ( ) Relógio (Minutos) |
++--------------------------------------------------------------------+
+| [ ] 🎛️ Testar Valor Manual no Visor (0 a 99)                        |
+|     [=====================O=============] -> Forçar no display      |
++--------------------------------------------------------------------+
+| [🔍 Diagnóstico USB...]                       [Minimizar para Tray]|
++--------------------------------------------------------------------+
 ```
 
 ### 1. Barra de Tarefas do Windows (Bandeja do Sistema / Tray)
@@ -142,9 +145,16 @@ O Vizzor vive discretamente na barra inferior do Windows, na área de notificaç
   * **Desativar Softwares Conflitantes de Fabricantes:** Fecha e desativa programas e serviços de coolers originais em segundo plano (como *tifSer*, *SendTemp*, utilitários da Rise Mode ou DeepCool) para garantir comunicação exclusiva e sem conflitos no barramento USB
   * **Sair do Vizzor**
 
-### 2. Painel de Controle Dark Mode e Detecção Dinâmica
-* **Identificação do Modelo do Usuário:** O cabeçalho exibe exatamente o modelo do cooler conectado ao seu PC. Caso nenhum hardware suportado seja detectado ou esteja desconectado, a identificação **permanece vazia**, sem exibir modelos de terceiros por engano.
-* **Réplica Gráfica Adaptativa:** Mostrador visual circular no centro com leitura simultânea de todas as temperaturas e cargas.
+### 2. Painel de Controle Dark Mode e Modo Standalone (PC Telemetry)
+* **Funciona com ou sem Water Cooler:** Mesmo que você não possua um cooler com visor digital USB, o Vizzor atua como um **monitor de hardware de sistema completo e ultraleve**, consumindo menos de 40 MB de RAM (substituindo ferramentas pesadas como NZXT CAM ou iCUE).
+* **Identificação Automática do Modelo:** Se um cooler suportado estiver conectado, o cabeçalho exibe o modelo correspondente. Se não houver cooler USB, ativa elegantemente o **`🖥️ Monitor de Hardware do Sistema (Modo Standalone)`**.
+* **Telemetria Expandida em Tempo Real:**
+  * **CPU:** Modelo exato, Temperatura (°C), Carga (%), Clock dinâmico (GHz), Consumo em Watts (W) e Voltagem VCore (V);
+  * **GPU:** Modelo da placa dedicada (NVIDIA / AMD), Temperatura Core & Hotspot (°C), Carga (%), VRAM Dedicada (ex: `6.2 / 12.0 GB`), Consumo (W) e Ventoinhas (RPM);
+  * **Memória RAM:** Uso detalhado em Gigabytes (ex: `15.4 / 32.0 GB`) e percentual de carga via chamada nativa Win32;
+  * **Armazenamento:** Nome do SSD NVMe / SATA e temperatura individual;
+  * **Placa-Mãe & Ventoinhas:** Nome da motherboard, temperatura do chipset/sistema e rotação das ventoinhas (CPU Fan RPM).
+* **Réplica Gráfica Adaptativa:** Mostrador visual circular no centro com leitura adaptativa da métrica selecionada.
 
 ### 3. Slider de Teste Manual Interativo
 * Permite sobrepor a leitura dos sensores e testar valores arbitrários de **0 a 99** diretamente no display físico do cooler;

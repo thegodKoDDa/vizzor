@@ -151,5 +151,45 @@ namespace Vizzor
         {
             get { return CurrentLanguage == Language.PtBr ? "Diagnóstico de Dispositivos USB" : "USB Devices Diagnostic"; }
         }
+
+        public static string StandaloneModeTitle
+        {
+            get { return CurrentLanguage == Language.PtBr ? "🖥️ Monitor de Hardware do Sistema (Modo Standalone)" : "🖥️ PC Hardware Monitor (Standalone Mode)"; }
+        }
+
+        public static string NoCoolerDetected
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Nenhum visor USB conectado - Monitorando componentes do PC" : "No USB display connected - Monitoring PC hardware"; }
+        }
+
+        public static string HardwareSensorsGroup
+        {
+            get { return CurrentLanguage == Language.PtBr ? " Telemetria do Sistema em Tempo Real " : " Real-Time System Telemetry "; }
+        }
+
+        public static string PowerWatts
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Consumo:" : "Power:"; }
+        }
+
+        public static string ClockSpeed
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Frequência:" : "Clock:"; }
+        }
+
+        public static string VramUsage
+        {
+            get { return CurrentLanguage == Language.PtBr ? "VRAM Dedicada:" : "Dedicated VRAM:"; }
+        }
+
+        public static string Fans
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Ventoinhas / Fans:" : "Cooling Fans:"; }
+        }
+
+        public static string Motherboard
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Placa-Mãe:" : "Motherboard:"; }
+        }
     }
 }

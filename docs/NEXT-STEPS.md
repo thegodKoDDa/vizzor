@@ -41,6 +41,14 @@ Este documento registra os marcos concluídos e os próximos objetivos de evolu�
 - [x] **Desativação Genérica de Conflitos OEM:** Opção para encerrar e desativar processos concorrentes de múltiplos fabricantes de coolers.
 - [x] **Repositório e Release Polidos:** Metadados, About, tópicos e releases organizados e atualizados.
 
+### Marco 7: Modo Standalone (PC Telemetry) & Telemetria Estendida de Hardware ✅
+- [x] **Suporte Completo a PCs sem Water Cooler:** Modo Standalone autônomo elegante (`🖥️ PC Hardware Monitor`), permitindo uso como monitor de telemetria leve (< 40 MB RAM) para qualquer usuário.
+- [x] **Telemetria de CPU Avançada:** Leitura de Nome do Processador, Frequência/Clock dinâmico (GHz), Consumo em Watts (W) e Voltagem VCore (V).
+- [x] **Telemetria de GPU Avançada:** Leitura de Nome da Placa, Temperatura Core e Hotspot (°C), Carga %, VRAM Dedicada (GB usados/total), Consumo (W) e Ventoinhas (RPM).
+- [x] **RAM Precisa em GB:** Leitura simultânea de Gigabytes usados/totais (ex: 15.4 / 32.0 GB) e percentual via API nativa Win32 sem consumo adicional.
+- [x] **Placa-Mãe e Ventoinhas do Gabinete:** Monitoramento de temperatura do sistema e rotação das ventoinhas (CPU Fan RPM).
+- [x] **Suíte de Testes Automatizada:** Criação de `tests/run_tests.py` cobrindo protocolos de todos os coolers, regras de clamping, modos de exibição e formatação de dados.
+
 ---
 
 ## 🚀 Próximos Passos (Futuro)

@@ -15,17 +15,24 @@ namespace Vizzor
         private Label _lblHeaderDevice;
         private Label _lblDisplayValue;
         private Label _lblDisplayTitle;
+        private Label _lblUnit;
+
+        // Telemetria em Tempo Real
         private Label _lblCpuTemp;
-        private Label _lblCpuLoad;
+        private Label _lblCpuDetail;
         private Label _lblGpuTemp;
-        private Label _lblGpuLoad;
+        private Label _lblGpuDetail;
         private Label _lblRamLoad;
         private Label _lblSsdTemp;
+        private Label _lblMbDetail;
 
+        // Radio Buttons de Modos
         private RadioButton _rbCpu;
         private RadioButton _rbGpu;
         private RadioButton _rbSsd;
         private RadioButton _rbMax;
+        private RadioButton _rbCpuLoad;
+        private RadioButton _rbRamLoad;
         private RadioButton _rbAlt;
         private RadioButton _rbClock;
 
@@ -35,6 +42,9 @@ namespace Vizzor
 
         private Button _btnLang;
         private Button _btnUsbScan;
+        private GroupBox _grpSensors;
+        private GroupBox _grpModes;
+        private GroupBox _grpManual;
 
         public bool IsManualTestActive
         {
@@ -59,7 +69,7 @@ namespace Vizzor
         private void InitializeComponents()
         {
             this.Text = Strings.AppTitle;
-            this.Size = new Size(560, 560);
+            this.Size = new Size(660, 680);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -70,27 +80,31 @@ namespace Vizzor
             var pnlHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 52,
+                Height = 56,
                 BackColor = Color.FromArgb(26, 30, 38)
             };
             var lblTitle = new Label
             {
                 Text = "VIZZOR",
-                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 13f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 220, 255),
                 AutoSize = true,
-                Location = new Point(20, 14)
+                Location = new Point(20, 16)
             };
             _lblHeaderDevice = new Label
             {
-                Text = (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected) ? _deviceManager.ActiveDevice.DeviceName : "",
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
-                ForeColor = Color.FromArgb(160, 180, 200),
+                Text = (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected)
+                    ? _deviceManager.ActiveDevice.DeviceName
+                    : Strings.StandaloneModeTitle,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+                ForeColor = (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected)
+                    ? Color.FromArgb(0, 220, 255)
+                    : Color.FromArgb(100, 225, 160),
                 AutoSize = true,
-                Location = new Point(100, 18)
+                Location = new Point(105, 19)
             };
 
-            // Botao Idioma (PT / EN)
+            // Botão Idioma (PT / EN)
             _btnLang = new Button
             {
                 Text = Strings.CurrentLanguage == Language.PtBr ? "🇧🇷 PT" : "🇺🇸 EN",
@@ -98,8 +112,8 @@ namespace Vizzor
                 ForeColor = Color.White,
                 BackColor = Color.FromArgb(40, 50, 65),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(68, 28),
-                Location = new Point(460, 12)
+                Size = new Size(72, 28),
+                Location = new Point(555, 14)
             };
             _btnLang.FlatAppearance.BorderSize = 0;
             _btnLang.Click += (s, e) =>
@@ -114,12 +128,11 @@ namespace Vizzor
             pnlHeader.Controls.Add(_btnLang);
             this.Controls.Add(pnlHeader);
 
-            // Container Central
-            // 1. Visor Simulado (Water Cooler Head)
+            // 1. Visor Simulado (Water Cooler Head / Mostrador Digital)
             var pnlCoolerHead = new Panel
             {
-                Location = new Point(25, 70),
-                Size = new Size(175, 175),
+                Location = new Point(25, 75),
+                Size = new Size(185, 235),
                 BackColor = Color.FromArgb(12, 14, 18)
             };
             pnlCoolerHead.Paint += (s, e) =>
@@ -127,22 +140,22 @@ namespace Vizzor
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 using (var pen = new Pen(Color.FromArgb(0, 190, 255), 3))
                 {
-                    e.Graphics.DrawEllipse(pen, 5, 5, 164, 164);
+                    e.Graphics.DrawEllipse(pen, 10, 15, 164, 164);
                 }
                 using (var penInner = new Pen(Color.FromArgb(40, 50, 65), 1))
                 {
-                    e.Graphics.DrawEllipse(penInner, 15, 15, 144, 144);
+                    e.Graphics.DrawEllipse(penInner, 20, 25, 144, 144);
                 }
             };
 
             _lblDisplayTitle = new Label
             {
                 Text = "CPU TEMP",
-                Font = new Font("Segoe UI", 7.5f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(140, 160, 180),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Size = new Size(155, 20),
-                Location = new Point(10, 32)
+                Size = new Size(165, 20),
+                Location = new Point(10, 44)
             };
             _lblDisplayValue = new Label
             {
@@ -150,76 +163,103 @@ namespace Vizzor
                 Font = new Font("Segoe UI", 42f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 240, 255),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Size = new Size(155, 72),
-                Location = new Point(10, 52)
+                Size = new Size(165, 72),
+                Location = new Point(10, 64)
             };
-            var lblUnit = new Label
+            _lblUnit = new Label
             {
                 Text = "°C",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 190, 255),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Size = new Size(155, 20),
-                Location = new Point(10, 126)
+                Size = new Size(165, 20),
+                Location = new Point(10, 138)
             };
+
+            var lblDisplaySub = new Label
+            {
+                Text = "Visualizador Digital",
+                Font = new Font("Segoe UI", 7.5f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(120, 140, 160),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(175, 24),
+                Location = new Point(5, 195)
+            };
+
             pnlCoolerHead.Controls.Add(_lblDisplayTitle);
             pnlCoolerHead.Controls.Add(_lblDisplayValue);
-            pnlCoolerHead.Controls.Add(lblUnit);
+            pnlCoolerHead.Controls.Add(_lblUnit);
+            pnlCoolerHead.Controls.Add(lblDisplaySub);
             this.Controls.Add(pnlCoolerHead);
 
             // 2. Cards de Sensores em Tempo Real (Direita)
-            var grpSensors = new GroupBox
+            _grpSensors = new GroupBox
             {
-                Text = " Sensores de Hardware ",
+                Text = Strings.HardwareSensorsGroup,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 200, 255),
-                Location = new Point(220, 65),
-                Size = new Size(295, 180)
+                Location = new Point(225, 70),
+                Size = new Size(400, 240)
             };
 
-            _lblCpuTemp = CreateMetricLabel("CPU (Processador):", "48 °C", 22, grpSensors);
-            _lblCpuLoad = CreateMetricLabel("Carga da CPU:", "15 %", 48, grpSensors);
-            _lblGpuTemp = CreateMetricLabel("GPU (Placa de Vídeo):", "44 °C", 74, grpSensors);
-            _lblGpuLoad = CreateMetricLabel("Carga da GPU:", "5 %", 100, grpSensors);
-            _lblRamLoad = CreateMetricLabel("Memória RAM:", "45 %", 126, grpSensors);
-            _lblSsdTemp = CreateMetricLabel("SSD NVMe (M.2):", "38 °C", 152, grpSensors);
-            this.Controls.Add(grpSensors);
+            // CPU
+            _lblCpuTemp = CreatePrimaryMetricLabel("CPU:", "48.0 °C (15%)", 24, _grpSensors);
+            _lblCpuDetail = CreateSecondaryMetricLabel("Ryzen 5 5600X • 4.2 GHz • 65 W", 44, _grpSensors);
+
+            // GPU
+            _lblGpuTemp = CreatePrimaryMetricLabel("GPU:", "44.0 °C (5%)", 68, _grpSensors);
+            _lblGpuDetail = CreateSecondaryMetricLabel("RTX 5060 Ti • VRAM: 4.5/16 GB • 140 W", 88, _grpSensors);
+
+            // RAM
+            _lblRamLoad = CreatePrimaryMetricLabel("RAM:", "15.4 / 32.0 GB (48%)", 112, _grpSensors);
+
+            // Armazenamento
+            _lblSsdTemp = CreatePrimaryMetricLabel("SSD / Armazenamento:", "38.0 °C", 140, _grpSensors);
+
+            // Placa-Mãe & Ventoinhas
+            _lblMbDetail = CreatePrimaryMetricLabel("Placa-Mãe & Fans:", "34.0 °C • CPU Fan: 1250 RPM", 175, _grpSensors);
+
+            this.Controls.Add(_grpSensors);
 
             // 3. Modos de Exibição
-            var grpModes = new GroupBox
+            _grpModes = new GroupBox
             {
-                Text = " Modo de Exibição no Visor ",
+                Text = Strings.DisplayModeTitle,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 200, 255),
-                Location = new Point(25, 255),
-                Size = new Size(490, 110)
+                Location = new Point(25, 325),
+                Size = new Size(600, 130)
             };
 
-            _rbCpu = CreateRadioButton("Temperatura da CPU", 15, 24, grpModes, DisplayMode.CpuTemp);
-            _rbGpu = CreateRadioButton("Temperatura da GPU", 250, 24, grpModes, DisplayMode.GpuTemp);
-            _rbSsd = CreateRadioButton("Temperatura do SSD NVMe", 15, 50, grpModes, DisplayMode.SsdTemp);
-            _rbMax = CreateRadioButton("O Mais Quente (CPU/GPU)", 250, 50, grpModes, DisplayMode.HighestTemp);
-            _rbAlt = CreateRadioButton("Alternar CPU e GPU", 15, 76, grpModes, DisplayMode.Alternating);
-            _rbClock = CreateRadioButton("Modo Relógio (Minutos)", 250, 76, grpModes, DisplayMode.ClockMinutes);
+            _rbCpu = CreateRadioButton("Temperatura da CPU", 15, 24, _grpModes, DisplayMode.CpuTemp);
+            _rbGpu = CreateRadioButton("Temperatura da GPU", 210, 24, _grpModes, DisplayMode.GpuTemp);
+            _rbSsd = CreateRadioButton("SSD NVMe", 410, 24, _grpModes, DisplayMode.SsdTemp);
 
-            this.Controls.Add(grpModes);
+            _rbMax = CreateRadioButton("O Mais Quente", 15, 54, _grpModes, DisplayMode.HighestTemp);
+            _rbCpuLoad = CreateRadioButton("Uso da CPU (%)", 210, 54, _grpModes, DisplayMode.CpuLoad);
+            _rbRamLoad = CreateRadioButton("Uso da RAM (%)", 410, 54, _grpModes, DisplayMode.RamLoad);
+
+            _rbAlt = CreateRadioButton("Alternar CPU e GPU", 15, 84, _grpModes, DisplayMode.Alternating);
+            _rbClock = CreateRadioButton("Modo Relógio (Minutos)", 210, 84, _grpModes, DisplayMode.ClockMinutes);
+
+            this.Controls.Add(_grpModes);
 
             // 4. Teste Manual com Slider (Opcao 3)
-            var grpManual = new GroupBox
+            _grpManual = new GroupBox
             {
-                Text = " Teste Manual do Visor (Slider) ",
+                Text = Strings.ManualTestTitle,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 200, 255),
-                Location = new Point(25, 375),
-                Size = new Size(490, 75)
+                Location = new Point(25, 470),
+                Size = new Size(600, 80)
             };
 
             _chkManualTest = new CheckBox
             {
-                Text = "Ativar Teste Manual",
+                Text = Strings.CurrentLanguage == Language.PtBr ? "Ativar Teste Manual" : "Enable Manual Test",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 240, 255),
-                Location = new Point(15, 24),
+                Location = new Point(15, 28),
                 AutoSize = true
             };
             _sliderManualTest = new TrackBar
@@ -228,8 +268,8 @@ namespace Vizzor
                 Maximum = 99,
                 Value = 77,
                 TickFrequency = 10,
-                Location = new Point(170, 20),
-                Size = new Size(250, 45),
+                Location = new Point(190, 24),
+                Size = new Size(330, 45),
                 Enabled = false
             };
             _lblSliderVal = new Label
@@ -237,7 +277,7 @@ namespace Vizzor
                 Text = "77",
                 Font = new Font("Segoe UI", 12f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 240, 255),
-                Location = new Point(430, 24),
+                Location = new Point(535, 26),
                 AutoSize = true
             };
             _chkManualTest.CheckedChanged += (s, e) =>
@@ -249,21 +289,21 @@ namespace Vizzor
                 _lblSliderVal.Text = _sliderManualTest.Value.ToString();
             };
 
-            grpManual.Controls.Add(_chkManualTest);
-            grpManual.Controls.Add(_sliderManualTest);
-            grpManual.Controls.Add(_lblSliderVal);
-            this.Controls.Add(grpManual);
+            _grpManual.Controls.Add(_chkManualTest);
+            _grpManual.Controls.Add(_sliderManualTest);
+            _grpManual.Controls.Add(_lblSliderVal);
+            this.Controls.Add(_grpManual);
 
-            // 5. Botoes Inferiores (Diagnostico USB + Minimizar)
+            // 5. Botões Inferiores (Diagnóstico USB + Minimizar)
             _btnUsbScan = new Button
             {
-                Text = "🔍 Diagnóstico USB...",
+                Text = Strings.CurrentLanguage == Language.PtBr ? "🔍 Diagnóstico USB..." : "🔍 USB Diagnostic...",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.White,
                 BackColor = Color.FromArgb(40, 50, 65),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(170, 34),
-                Location = new Point(25, 465)
+                Size = new Size(200, 36),
+                Location = new Point(25, 570)
             };
             _btnUsbScan.FlatAppearance.BorderSize = 0;
             _btnUsbScan.Click += OnShowUsbDiagnostic;
@@ -271,13 +311,13 @@ namespace Vizzor
 
             var btnMinimize = new Button
             {
-                Text = "Minimizar para a Bandeja",
+                Text = Strings.CurrentLanguage == Language.PtBr ? "Minimizar para a Bandeja" : "Minimize to Tray",
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
                 ForeColor = Color.White,
                 BackColor = Color.FromArgb(30, 120, 200),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(200, 34),
-                Location = new Point(315, 465)
+                Size = new Size(220, 36),
+                Location = new Point(405, 570)
             };
             btnMinimize.FlatAppearance.BorderSize = 0;
             btnMinimize.Click += (s, e) => this.Hide();
@@ -333,7 +373,7 @@ namespace Vizzor
 
             var btnCopy = new Button
             {
-                Text = "Copiar Relatório USB",
+                Text = Strings.CurrentLanguage == Language.PtBr ? "Copiar Relatório USB" : "Copy USB Report",
                 Dock = DockStyle.Bottom,
                 Height = 36,
                 BackColor = Color.FromArgb(30, 120, 200),
@@ -349,7 +389,9 @@ namespace Vizzor
                     text += string.Format("{0} | {1} | VID={2} | PID={3} | Suportado={4}\n", d.Manufacturer, d.Product, d.Vid, d.Pid, d.IsSupported);
                 }
                 Clipboard.SetText(text);
-                MessageBox.Show("Relatório copiado para a Área de Transferência!", "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(
+                    Strings.CurrentLanguage == Language.PtBr ? "Relatório copiado para a Área de Transferência!" : "Report copied to Clipboard!",
+                    "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
 
             form.Controls.Add(list);
@@ -360,15 +402,22 @@ namespace Vizzor
         private void UpdateLanguageStrings()
         {
             this.Text = Strings.AppTitle;
+            _grpSensors.Text = Strings.HardwareSensorsGroup;
+            _grpModes.Text = Strings.DisplayModeTitle;
+            _grpManual.Text = Strings.ManualTestTitle;
             _rbCpu.Text = Strings.CpuTemp;
             _rbGpu.Text = Strings.GpuTemp;
             _rbSsd.Text = Strings.SsdTemp;
             _rbMax.Text = Strings.HighestTemp;
+            _rbCpuLoad.Text = Strings.CpuLoad;
+            _rbRamLoad.Text = Strings.RamLoad;
             _rbAlt.Text = Strings.Alternating;
             _rbClock.Text = Strings.ClockMinutes;
+            _chkManualTest.Text = Strings.CurrentLanguage == Language.PtBr ? "Ativar Teste Manual" : "Enable Manual Test";
+            _btnUsbScan.Text = Strings.CurrentLanguage == Language.PtBr ? "🔍 Diagnóstico USB..." : "🔍 USB Diagnostic...";
         }
 
-        private Label CreateMetricLabel(string title, string initialValue, int top, Control parent)
+        private Label CreatePrimaryMetricLabel(string title, string initialValue, int top, Control parent)
         {
             var lblTitle = new Label
             {
@@ -383,12 +432,26 @@ namespace Vizzor
                 Text = initialValue,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(190, top),
+                Location = new Point(160, top),
                 AutoSize = true
             };
             parent.Controls.Add(lblTitle);
             parent.Controls.Add(lblVal);
             return lblVal;
+        }
+
+        private Label CreateSecondaryMetricLabel(string text, int top, Control parent)
+        {
+            var lbl = new Label
+            {
+                Text = text,
+                Font = new Font("Segoe UI", 7.5f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(130, 150, 175),
+                Location = new Point(160, top),
+                AutoSize = true
+            };
+            parent.Controls.Add(lbl);
+            return lbl;
         }
 
         private RadioButton CreateRadioButton(string text, int x, int y, Control parent, DisplayMode mode)
@@ -413,33 +476,113 @@ namespace Vizzor
         {
             if (!this.Visible) return;
 
+            // Cabeçalho de Status
             if (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected)
             {
-                _lblHeaderDevice.Text = _deviceManager.ActiveDevice.DeviceName;
+                _lblHeaderDevice.Text = "🧊 " + _deviceManager.ActiveDevice.DeviceName;
+                _lblHeaderDevice.ForeColor = Color.FromArgb(0, 220, 255);
             }
             else
             {
-                _lblHeaderDevice.Text = "";
+                _lblHeaderDevice.Text = Strings.StandaloneModeTitle;
+                _lblHeaderDevice.ForeColor = Color.FromArgb(100, 225, 160);
             }
 
             _lblDisplayValue.Text = displayValue.ToString();
-            _lblCpuTemp.Text = string.Format("{0:F1} °C", metrics.CpuTemp);
-            _lblCpuLoad.Text = string.Format("{0:F0} %", metrics.CpuLoad);
-            _lblGpuTemp.Text = string.Format("{0:F1} °C", metrics.GpuTemp);
-            _lblGpuLoad.Text = string.Format("{0:F0} %", metrics.GpuLoad);
-            _lblRamLoad.Text = string.Format("{0:F0} %", metrics.RamLoad);
-            _lblSsdTemp.Text = string.Format("{0:F1} °C", metrics.SsdTemp > 0 ? metrics.SsdTemp : 38f);
 
+            // CPU
+            _lblCpuTemp.Text = string.Format("{0:F1} °C ({1:F0}%)", metrics.CpuTemp, metrics.CpuLoad);
+            string cpuName = !string.IsNullOrEmpty(metrics.CpuName) ? metrics.CpuName : "CPU";
+            string cpuClock = metrics.CpuClockGhz > 0 ? string.Format("{0:F2} GHz", metrics.CpuClockGhz) : "";
+            string cpuPower = metrics.CpuPowerWatts > 0 ? string.Format("{0:F0} W", metrics.CpuPowerWatts) : "";
+            string cpuVolt = metrics.CpuVoltage > 0 ? string.Format("{0:F2} V", metrics.CpuVoltage) : "";
+
+            string cpuExtra = cpuName;
+            if (!string.IsNullOrEmpty(cpuClock)) cpuExtra += " • " + cpuClock;
+            if (!string.IsNullOrEmpty(cpuPower)) cpuExtra += " • " + cpuPower;
+            if (!string.IsNullOrEmpty(cpuVolt)) cpuExtra += " • " + cpuVolt;
+            _lblCpuDetail.Text = cpuExtra;
+
+            // GPU
+            string gpuHot = metrics.GpuHotspotTemp > 0 ? string.Format(" (Hotspot: {0:F0}°C)", metrics.GpuHotspotTemp) : "";
+            _lblGpuTemp.Text = string.Format("{0:F1} °C ({1:F0}%){2}", metrics.GpuTemp, metrics.GpuLoad, gpuHot);
+
+            string gpuName = !string.IsNullOrEmpty(metrics.GpuName) ? metrics.GpuName : "GPU";
+            string gpuVram = (metrics.GpuVramUsedGb > 0 && metrics.GpuVramTotalGb > 0)
+                ? string.Format("VRAM: {0:F1}/{1:F1} GB", metrics.GpuVramUsedGb, metrics.GpuVramTotalGb)
+                : "";
+            string gpuPower = metrics.GpuPowerWatts > 0 ? string.Format("{0:F0} W", metrics.GpuPowerWatts) : "";
+            string gpuFan = metrics.GpuFanRpm > 0 ? string.Format("{0:F0} RPM", metrics.GpuFanRpm) : "";
+
+            string gpuExtra = gpuName;
+            if (!string.IsNullOrEmpty(gpuVram)) gpuExtra += " • " + gpuVram;
+            if (!string.IsNullOrEmpty(gpuPower)) gpuExtra += " • " + gpuPower;
+            if (!string.IsNullOrEmpty(gpuFan)) gpuExtra += " • Fan: " + gpuFan;
+            _lblGpuDetail.Text = gpuExtra;
+
+            // RAM
+            if (metrics.RamTotalGb > 0)
+            {
+                _lblRamLoad.Text = string.Format("{0:F1} / {1:F1} GB ({2:F0}%)", metrics.RamUsedGb, metrics.RamTotalGb, metrics.RamLoad);
+            }
+            else
+            {
+                _lblRamLoad.Text = string.Format("{0:F0} %", metrics.RamLoad);
+            }
+
+            // Armazenamento
+            string ssdName = !string.IsNullOrEmpty(metrics.StorageName) ? metrics.StorageName + " • " : "";
+            _lblSsdTemp.Text = string.Format("{0}{1:F1} °C", ssdName, metrics.SsdTemp > 0 ? metrics.SsdTemp : 38f);
+
+            // Placa-mãe & Ventoinhas
+            string mbName = !string.IsNullOrEmpty(metrics.MotherboardName) ? metrics.MotherboardName : "Motherboard";
+            string mbTemp = metrics.MotherboardTemp > 0 ? string.Format("{0:F0} °C", metrics.MotherboardTemp) : "OK";
+            string cpuFan = metrics.CpuFanRpm > 0 ? string.Format("CPU Fan: {0:F0} RPM", metrics.CpuFanRpm) : "Fans Ativos";
+            _lblMbDetail.Text = string.Format("{0} • {1} • {2}", mbName, mbTemp, cpuFan);
+
+            // Unidade no Visor
             switch (currentMode)
             {
-                case DisplayMode.CpuTemp: _lblDisplayTitle.Text = "CPU TEMP"; break;
-                case DisplayMode.GpuTemp: _lblDisplayTitle.Text = "GPU TEMP"; break;
-                case DisplayMode.SsdTemp: _lblDisplayTitle.Text = "SSD NVME"; break;
-                case DisplayMode.HighestTemp: _lblDisplayTitle.Text = "HOTSPOT"; break;
-                case DisplayMode.Alternating: _lblDisplayTitle.Text = "ALTERNANDO"; break;
-                case DisplayMode.ClockMinutes: _lblDisplayTitle.Text = "RELÓGIO"; break;
-                case DisplayMode.StealthOff: _lblDisplayTitle.Text = "DESLIGADO"; break;
-                default: _lblDisplayTitle.Text = "VIZZOR"; break;
+                case DisplayMode.CpuTemp:
+                    _lblDisplayTitle.Text = "CPU TEMP";
+                    _lblUnit.Text = "°C";
+                    break;
+                case DisplayMode.GpuTemp:
+                    _lblDisplayTitle.Text = "GPU TEMP";
+                    _lblUnit.Text = "°C";
+                    break;
+                case DisplayMode.SsdTemp:
+                    _lblDisplayTitle.Text = "SSD NVME";
+                    _lblUnit.Text = "°C";
+                    break;
+                case DisplayMode.HighestTemp:
+                    _lblDisplayTitle.Text = "HOTSPOT";
+                    _lblUnit.Text = "°C";
+                    break;
+                case DisplayMode.CpuLoad:
+                    _lblDisplayTitle.Text = "CPU LOAD";
+                    _lblUnit.Text = "%";
+                    break;
+                case DisplayMode.RamLoad:
+                    _lblDisplayTitle.Text = "RAM LOAD";
+                    _lblUnit.Text = "%";
+                    break;
+                case DisplayMode.Alternating:
+                    _lblDisplayTitle.Text = "ALTERNANDO";
+                    _lblUnit.Text = "°C";
+                    break;
+                case DisplayMode.ClockMinutes:
+                    _lblDisplayTitle.Text = "RELÓGIO";
+                    _lblUnit.Text = "MIN";
+                    break;
+                case DisplayMode.StealthOff:
+                    _lblDisplayTitle.Text = "DESLIGADO";
+                    _lblUnit.Text = "--";
+                    break;
+                default:
+                    _lblDisplayTitle.Text = "VIZZOR";
+                    _lblUnit.Text = "°C";
+                    break;
             }
 
             if (displayValue >= 80)
@@ -453,6 +596,8 @@ namespace Vizzor
             _rbGpu.Checked = currentMode == DisplayMode.GpuTemp;
             _rbSsd.Checked = currentMode == DisplayMode.SsdTemp;
             _rbMax.Checked = currentMode == DisplayMode.HighestTemp;
+            _rbCpuLoad.Checked = currentMode == DisplayMode.CpuLoad;
+            _rbRamLoad.Checked = currentMode == DisplayMode.RamLoad;
             _rbAlt.Checked = currentMode == DisplayMode.Alternating;
             _rbClock.Checked = currentMode == DisplayMode.ClockMinutes;
         }

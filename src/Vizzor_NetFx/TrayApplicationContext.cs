@@ -145,6 +145,12 @@ namespace Vizzor
                 menu.Items.Add(deviceItem);
                 menu.Items.Add(new ToolStripSeparator());
             }
+            else
+            {
+                var deviceItem = new ToolStripMenuItem(Strings.StandaloneModeTitle) { Enabled = false };
+                menu.Items.Add(deviceItem);
+                menu.Items.Add(new ToolStripSeparator());
+            }
 
             // 1. Modos de Exibicao
             _menuCpu = new ToolStripMenuItem("Temperatura da CPU", null, delegate { SetMode(DisplayMode.CpuTemp); });
@@ -375,12 +381,29 @@ namespace Vizzor
                 try { File.AppendAllText(@"C:\Vizzor\vizzor.log", string.Format("[Tick {0}] CPU={1:F1}C, GPU={2:F1}C, DisplayVal={3}, Sent={4}\n", _logCycles, metrics.CpuTemp, metrics.GpuTemp, displayValue, sent)); } catch { }
             }
 
-            string status = sent ? "Conectado" : "Buscando visor...";
-            string tooltip = string.Format("Vizzor ({0})\nCPU: {1:F0}°C ({2:F0}%)\nGPU: {3:F0}°C ({4:F0}%)\nRAM: {5:F0}%\nVisor: {6}", status, metrics.CpuTemp, metrics.CpuLoad, metrics.GpuTemp, metrics.GpuLoad, metrics.RamLoad, displayValue);
+            string status;
+            if (sent && _deviceManager.ActiveDevice != null)
+                status = _deviceManager.ActiveDevice.DeviceName;
+            else if (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected)
+                status = "Conectado";
+            else
+                status = "Monitor de PC";
+
+            string tooltip;
+            if (status == "Monitor de PC")
+            {
+                tooltip = string.Format("Vizzor (Monitor de PC)\nCPU: {0:F0}°C ({1:F0}%)\nGPU: {2:F0}°C ({3:F0}%)\nRAM: {4:F0}%",
+                    metrics.CpuTemp, metrics.CpuLoad, metrics.GpuTemp, metrics.GpuLoad, metrics.RamLoad);
+            }
+            else
+            {
+                tooltip = string.Format("Vizzor ({0})\nCPU: {1:F0}°C ({2:F0}%)\nGPU: {3:F0}°C ({4:F0}%)\nRAM: {5:F0}%\nVisor: {6}",
+                    status, metrics.CpuTemp, metrics.CpuLoad, metrics.GpuTemp, metrics.GpuLoad, metrics.RamLoad, displayValue);
+            }
 
             if (tooltip.Length >= 64)
             {
-                tooltip = string.Format("Vizzor: {0} | CPU: {1:F0}°C | GPU: {2:F0}°C", displayValue, metrics.CpuTemp, metrics.GpuTemp);
+                tooltip = string.Format("Vizzor: CPU {0:F0}°C | GPU {1:F0}°C | RAM {2:F0}%", metrics.CpuTemp, metrics.GpuTemp, metrics.RamLoad);
                 if (tooltip.Length >= 64) tooltip = tooltip.Substring(0, 63);
             }
 

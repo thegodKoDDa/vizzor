@@ -16,17 +16,17 @@ flowchart TD
         RyzenSMU <--> PawnIO
     end
 
-    subgraph HardwareSensors ["Camada de Telemetria"]
-        LHM["LibreHardwareMonitorLib.dll<br/>(CPU, GPU NVIDIA/AMD, NVMe SSD)"]
-        Win32RAM["Win32 GlobalMemoryStatusEx<br/>(Memória RAM Nativa)"]
+    subgraph HardwareSensors ["Camada de Telemetria Completa"]
+        LHM["LibreHardwareMonitorLib.dll<br/>(CPU, GPU NVIDIA/AMD, NVMe SSD, Motherboard & SuperIO Fans)"]
+        Win32RAM["Win32 GlobalMemoryStatusEx<br/>(Memória RAM Nativa em GB e %)"]
         PawnIO <--> LHM
     end
 
     subgraph VizzorCore ["Núcleo do Vizzor (Vizzor.exe)"]
-        HWMgr["HardwareMonitor"]
-        DevMgr["DeviceManager (Auto-Detect USB)"]
-        Tray["TrayApplicationContext (Timer 1s)"]
-        Dash["DashboardForm (UI Dark Mode)"]
+        HWMgr["HardwareMonitor (CPU Watts/Clocks, GPU VRAM/Fans, RAM GBs)"]
+        DevMgr["DeviceManager (Auto-Detect USB Cooler)"]
+        Tray["TrayApplicationContext (Ícone Dinâmico & Modos)"]
+        Dash["DashboardForm (UI Dark Mode & Modo Standalone)"]
 
         LHM --> HWMgr
         Win32RAM --> HWMgr
@@ -35,18 +35,11 @@ flowchart TD
         Tray --> DevMgr
     end
 
-    subgraph USBDevices ["Dispositivos USB Físicos (HID)"]
-        Rise["Rise Mode Aura Ice 360 / 240"]
-        DeepCool["DeepCool Digital (AK400/AK620)"]
-        NZXT["NZXT Kraken (Z / Elite)"]
-        LianLi["Lian Li (Galahad II / TL LCD)"]
-        CM["Cooler Master Atmos"]
-
-        DevMgr --> Rise
-        DevMgr --> DeepCool
-        DevMgr --> NZXT
-        DevMgr --> LianLi
-        DevMgr --> CM
+    subgraph Modes ["Modos Operacionais"]
+        CoolerMode["Modo Water Cooler USB<br/>(Rise Mode, DeepCool, NZXT, Lian Li, Cooler Master)"]
+        StandaloneMode["Modo Monitor de Hardware do Sistema (Standalone)<br/>(Para computadores sem visor físico USB)"]
+        DevMgr --> CoolerMode
+        DevMgr --> StandaloneMode
     end
 ```
 
