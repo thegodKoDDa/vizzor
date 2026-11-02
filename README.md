@@ -4,23 +4,35 @@ Investigação e possível software alternativo para o visor do water cooler Ris
 
 ## Estado atual
 
-Primeiro marco atingido. O protocolo HID de comunicação com o visor foi decodificado a partir da engenharia reversa dos binários originais. Os identificadores de hardware (`VID: 0xAA88`, `PID: 0x8666`) e o payload de 24 bytes foram identificados e documentados em `docs/PROTOCOL.md`.
+**Projeto concluído e em produção.**
+O software nativo **Vizzor v2.0** foi desenvolvido, validado e está em execução contínua no Windows do usuário, substituindo com sucesso o software e o serviço proprietários da Rise Mode.
 
-O usuário confirma que o software original só controla o visor. Não assumir controle de bomba, ventoinhas ou iluminação.
+O visor exibe a temperatura real do **AMD Ryzen 5 5600X** e da **NVIDIA GeForce RTX 5060 Ti** com suporte a modos configuráveis e consumo inferior a 50 MB de RAM.
 
-## Objetivo
+## Funcionalidades do Vizzor v2.0
 
-Desenvolver um aplicativo/serviço próprio leve e confiável para alimentar o visor com informações do sistema (temperatura de CPU, GPU, porcentagens etc.), sem a necessidade do software proprietário.
+- **Ícone Dinâmico na Bandeja (Live Tray Icon):** Desenha a temperatura atualizada em tempo real ao lado do relógio do Windows com cores térmicas adaptativas (Ciano < 65°C, Laranja 65–80°C, Vermelho > 80°C).
+- **Múltiplos Modos de Exibição:**
+  - Temperatura da CPU (Ryzen SMU Tctl/Tdie);
+  - Temperatura da GPU (NVIDIA NVAPI Core);
+  - O Mais Quente (CPU/GPU Hotspot dinâmico);
+  - Alternância periódica (troca automática a cada 3s, 5s ou 10s);
+  - Uso da CPU (%) e Uso de Memória RAM (%);
+  - Modo Stealth (permite apagar o visor quando desejado).
+- **Controle de Frequência de Atualização:** 500 ms (rápido), 1000 ms (normal) ou 2000 ms (econômico).
+- **Alerta de Alta Temperatura:** Notificação nativa do Windows se a CPU ou GPU ultrapassar 85°C.
+- **Auto-início com o Windows:** Alternável com 1 clique no menu.
+- **Desativação Integrada:** Botão no menu para desativar o serviço antigo `tifSer` da Rise Mode.
+- **Executável Único:** Apenas 19 KB, sem instalador, com ícone de alta resolução embutido.
 
-## Conteúdo
+## Estrutura do Repositório
 
-- docs/CONTEXT.md: fatos, hipóteses e fontes da investigação anterior.
-- docs/NEXT-STEPS.md: etapas do plano de desenvolvimento.
-- docs/PROTOCOL.md: especificação técnica do protocolo USB HID e mapeamento dos bytes.
-- evidence/vendor/: cópia local dos arquivos da instalação original.
-- evidence/manifest.json: tamanhos e hashes SHA-256 da cópia.
-- evidence/captures/: reservado para capturas de tráfego.
-- src/ e tools/: reservados para implementação e ferramentas de teste.
+- `docs/CONTEXT.md`: histórico e análise dos componentes originais.
+- `docs/PROTOCOL.md`: especificação do protocolo USB HID decodificado.
+- `docs/NEXT-STEPS.md`: registro dos marcos atingidos.
+- `src/Vizzor_NetFx/`: código-fonte da aplicação nativa .NET Framework 4.8.
+- `tools/`: ferramentas de teste, verificação e scripts auxiliares.
+- `evidence/`: cópia de segurança dos binários originais do fabricante.
 
 ## Ambiente
 
