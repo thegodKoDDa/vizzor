@@ -53,9 +53,14 @@ namespace Vizzor
                 }
             }
 
-            // Fallback: seleciona o Rise Mode padrao
-            _activeDevice = _supportedDrivers[0];
+            // Se nao encontrou nenhum dispositivo conectado, mantem nulo (vazio)
+            _activeDevice = null;
             return false;
+        }
+
+        public bool IsDeviceConnected
+        {
+            get { return _activeDevice != null && _activeDevice.IsConnected; }
         }
 
         public bool SelectDriver(Type driverType)

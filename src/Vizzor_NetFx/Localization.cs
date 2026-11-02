@@ -114,7 +114,17 @@ namespace Vizzor
 
         public static string DisableOldSoftware
         {
-            get { return CurrentLanguage == Language.PtBr ? "Desativar Software Antigo da Rise Mode" : "Disable Vendor Background Software"; }
+            get { return CurrentLanguage == Language.PtBr ? "Desativar Softwares Conflitantes de Fabricantes" : "Disable Conflicting Vendor Software"; }
+        }
+
+        public static string DisableOldSoftwarePrompt
+        {
+            get
+            {
+                return CurrentLanguage == Language.PtBr
+                    ? "Deseja encerrar e desativar servicos e programas conflitantes de fabricantes de coolers (Rise Mode tifSer, SendTemp, DeepCool, etc.) para evitar conflitos no visor USB?"
+                    : "Do you want to terminate and disable conflicting background vendor software (Rise Mode tifSer, SendTemp, DeepCool, etc.) to prevent USB display conflicts?";
+            }
         }
 
         public static string Exit

@@ -139,9 +139,12 @@ namespace Vizzor
             };
             menu.Items.Add(openDashItem);
 
-            var deviceItem = new ToolStripMenuItem("Cooler: " + _deviceManager.ActiveDevice.DeviceName) { Enabled = false };
-            menu.Items.Add(deviceItem);
-            menu.Items.Add(new ToolStripSeparator());
+            if (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected)
+            {
+                var deviceItem = new ToolStripMenuItem("Cooler: " + _deviceManager.ActiveDevice.DeviceName) { Enabled = false };
+                menu.Items.Add(deviceItem);
+                menu.Items.Add(new ToolStripSeparator());
+            }
 
             // 1. Modos de Exibicao
             _menuCpu = new ToolStripMenuItem("Temperatura da CPU", null, delegate { SetMode(DisplayMode.CpuTemp); });
@@ -207,7 +210,7 @@ namespace Vizzor
 
             menu.Items.Add(new ToolStripSeparator());
 
-            var cleanOldItem = new ToolStripMenuItem("Desativar Software Antigo da Rise Mode", null, OnDisableOldSoftware);
+            var cleanOldItem = new ToolStripMenuItem(Strings.DisableOldSoftware, null, OnDisableOldSoftware);
             menu.Items.Add(cleanOldItem);
 
             menu.Items.Add(new ToolStripSeparator());
@@ -477,23 +480,23 @@ namespace Vizzor
 
         private void OnDisableOldSoftware(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Deseja desativar o servico e a inicializacao automatica do software antigo da Rise Mode?", "Vizzor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show(Strings.DisableOldSoftwarePrompt, "Vizzor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 try
                 {
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = "cmd.exe",
-                        Arguments = "/c net stop tifSer 2>nul & sc config tifSer start=disabled 2>nul & taskkill /F /IM \"SendTemp.exe\" 2>nul & taskkill /F /IM \"Rise Mode Temp CPU Driver R2.2.exe\" 2>nul",
+                        Arguments = "/c net stop tifSer 2>nul & sc config tifSer start=disabled 2>nul & taskkill /F /IM \"SendTemp.exe\" 2>nul & taskkill /F /IM \"Rise Mode Temp CPU Driver R2.2.exe\" 2>nul & taskkill /F /IM \"DeepCool Digital.exe\" 2>nul & taskkill /F /IM \"DeepCool.exe\" 2>nul",
                         Verb = "runas",
                         CreateNoWindow = true,
                         WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
                     });
-                    MessageBox.Show("Software antigo desativado com sucesso!", "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(Strings.CurrentLanguage == Language.PtBr ? "Softwares conflitantes desativados com sucesso!" : "Conflicting software disabled successfully!", "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Falha ao desativar: " + ex.Message, "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Falha: " + ex.Message, "Vizzor", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
         }

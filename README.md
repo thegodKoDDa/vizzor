@@ -107,11 +107,11 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizz
 ```text
 +--------------------------------------------------------------+
 | 🧊 VIZZOR - Hardware Display Controller           [🇧🇷 PT / 🇺🇸 EN] |
-| Dispositivo: Rise Mode Aura Ice 360 (Conectado via USB HID)  |
+| Dispositivo: [Modelo Detectado do Usuário]                   |
 +--------------------------------------------------------------+
 |   [ REPLICA VISOR ]    |  TELEMETRIA AO VIVO                 |
 |       ( 46°C )         |  • CPU (Ryzen 5 5600X):  46.4°C (22%)|
-|     Aura Ice Head      |  • GPU (RTX 5060 Ti):    42.0°C (12%)|
+|     Visual Circular    |  • GPU (RTX 5060 Ti):    42.0°C (12%)|
 |                        |  • RAM:                  48.1%       |
 |                        |  • SSD (NVMe M.2):       38.0°C      |
 +--------------------------------------------------------------+
@@ -126,20 +126,29 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizz
 +--------------------------------------------------------------+
 ```
 
-### 1. Painel de Controle Dark Mode
-* Dê **dois cliques** no ícone do Vizzor na barra de tarefas (ou clique com botão direito -> *Abrir Painel de Controle...*);
-* Réplica gráfica estilizada do cabeçote do water cooler com anel luminoso adaptativo;
-* Telemetria completa em tempo real para todos os componentes principais.
+### 1. Barra de Tarefas do Windows (Bandeja do Sistema / Tray)
+O Vizzor vive discretamente na barra inferior do Windows, na área de notificações ao lado do relógio do sistema:
+* **Ícone com Números ao Vivo:** Desenha o valor da temperatura em tempo real diretamente no ícone com cores térmicas adaptativas:
+  * 🔵 **Ciano Claro:** Operação Normal (< 65 °C)
+  * 🟠 **Laranja:** Carga Moderada / Jogos (65 °C a 80 °C)
+  * 🔴 **Vermelho:** Alerta Térmico (> 80 °C)
+* **Clique com o Botão Direito no Ícone (Menu Contextual Rápido):**
+  * **Abrir Painel de Controle...** (ou simplesmente 2 cliques rápidos com botão esquerdo)
+  * **Cooler Conectado:** Exibe o modelo específico do seu cooler (se não detectado ou desconectado, o campo fica vazio)
+  * **Modo de Exibição:** Troca instantânea entre CPU Temp, GPU Temp, SSD NVMe, O Mais Quente, Alternado (5s), Relógio, Carga CPU (%), Carga RAM (%) e Modo Stealth (Apagar Visor)
+  * **Velocidade de Atualização:** Rápido (500 ms), Normal (1s) ou Econômico (2s)
+  * **Tempo de Alternância:** Alternar a cada 3s, 5s ou 10s
+  * **Efeitos e Alertas:** Ativação do alerta no gabinete (> 85°C), notificações do Windows e Inicialização com o Windows
+  * **Desativar Softwares Conflitantes de Fabricantes:** Fecha e desativa programas e serviços de coolers originais em segundo plano (como *tifSer*, *SendTemp*, utilitários da Rise Mode ou DeepCool) para garantir comunicação exclusiva e sem conflitos no barramento USB
+  * **Sair do Vizzor**
 
-### 2. Slider de Teste Manual Interativo
+### 2. Painel de Controle Dark Mode e Detecção Dinâmica
+* **Identificação do Modelo do Usuário:** O cabeçalho exibe exatamente o modelo do cooler conectado ao seu PC. Caso nenhum hardware suportado seja detectado ou esteja desconectado, a identificação **permanece vazia**, sem exibir modelos de terceiros por engano.
+* **Réplica Gráfica Adaptativa:** Mostrador visual circular no centro com leitura simultânea de todas as temperaturas e cargas.
+
+### 3. Slider de Teste Manual Interativo
 * Permite sobrepor a leitura dos sensores e testar valores arbitrários de **0 a 99** diretamente no display físico do cooler;
 * Essencial para verificar se todos os segmentos de LED do visor estão funcionando perfeitamente.
-
-### 3. Cores Térmicas Adaptativas na Barra de Tarefas
-O ícone do Vizzor renderiza a temperatura atual com cores visuais dinâmicas:
-* 🔵 **Ciano Claro:** Operação Normal (< 65 °C)
-* 🟠 **Laranja:** Carga Moderada / Jogos (65 °C a 80 °C)
-* 🔴 **Vermelho:** Alerta Térmico (> 80 °C)
 
 ### 4. Alerta Visual no Gabinete
 Se qualquer componente monitorado ultrapassar **85 °C**, o display físico pisca continuamente em ciclo de pulso, permitindo perceber instantaneamente anomalias térmicas pela lateral de vidro do gabinete.

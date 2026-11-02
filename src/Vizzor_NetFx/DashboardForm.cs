@@ -83,7 +83,7 @@ namespace Vizzor
             };
             _lblHeaderDevice = new Label
             {
-                Text = _deviceManager.ActiveDevice.DeviceName,
+                Text = (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected) ? _deviceManager.ActiveDevice.DeviceName : "",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(160, 180, 200),
                 AutoSize = true,
@@ -413,9 +413,14 @@ namespace Vizzor
         {
             if (!this.Visible) return;
 
-            string status = _deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected ? Strings.Connected : Strings.Searching;
-            string devName = _deviceManager.ActiveDevice != null ? _deviceManager.ActiveDevice.DeviceName : "Visor USB";
-            _lblHeaderDevice.Text = string.Format("{0} [{1}]", devName, status);
+            if (_deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.IsConnected)
+            {
+                _lblHeaderDevice.Text = _deviceManager.ActiveDevice.DeviceName;
+            }
+            else
+            {
+                _lblHeaderDevice.Text = "";
+            }
 
             _lblDisplayValue.Text = displayValue.ToString();
             _lblCpuTemp.Text = string.Format("{0:F1} °C", metrics.CpuTemp);
