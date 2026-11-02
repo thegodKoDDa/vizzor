@@ -83,12 +83,13 @@ public sealed class HardwareMonitor : IDisposable
     {
         // Temperatura
         var tempSensors = hardware.Sensors.Where(s => s.SensorType == SensorType.Temperature).ToList();
-        var preferredTemp = tempSensors.FirstOrDefault(s => s.Name.Contains("Package", StringComparison.OrdinalIgnoreCase))
-                         ?? tempSensors.FirstOrDefault(s => s.Name.Contains("Core (Tctl/Tdie)", StringComparison.OrdinalIgnoreCase))
-                         ?? tempSensors.FirstOrDefault(s => s.Name.Contains("Core Average", StringComparison.OrdinalIgnoreCase))
+        var preferredTemp = tempSensors.FirstOrDefault(s => s.Name.Contains("Core (Tctl/Tdie)", StringComparison.OrdinalIgnoreCase) && s.Value > 0)
+                         ?? tempSensors.FirstOrDefault(s => s.Name.Contains("CCD", StringComparison.OrdinalIgnoreCase) && s.Value > 0)
+                         ?? tempSensors.FirstOrDefault(s => s.Name.Contains("Package", StringComparison.OrdinalIgnoreCase) && s.Value > 0)
+                         ?? tempSensors.FirstOrDefault(s => s.Value > 0)
                          ?? tempSensors.FirstOrDefault();
 
-        if (preferredTemp?.Value is { } tempVal)
+        if (preferredTemp?.Value is { } tempVal && tempVal > 0)
         {
             metrics.CpuTemp = tempVal;
         }
