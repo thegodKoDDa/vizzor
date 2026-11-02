@@ -65,15 +65,23 @@ O payload enviado para o dispositivo tem tamanho fixo de **24 bytes** (o aplicat
 
 ---
 
-## 4. Conclusões sobre a Capacidade do Hardware
+## 4. Conclusões e Validação Experimental no Hardware Real
 
-1. **Natureza do Display**:
-   - O dispositivo **não** recebe bitmaps, frames de imagem ou streams de vídeo arbitrários.
-   - O controlador do display possui lógica/firmware pré-programado que interpreta campos numéricos pré-definidos (temperaturas e porcentagens de carga).
-2. **Campos Suportados**:
-   - Embora o software padrão da Rise Mode comercialmente mostre apenas a temperatura da CPU, o protocolo original do hardware já prevê envio de:
-     - Temperatura de GPU;
-     - Porcentagem de uso de CPU e GPU;
-     - Porcentagem de uso de RAM;
-     - Temperatura da placa-mãe.
-   - Resta testar se o display físico possui segmentos/ícones para essas métricas ou se apenas o campo de CPU é desenhado fisicamente no modelo comercializado.
+Testes práticos realizados diretamente no hardware conectado confirmaram:
+
+1. **Validação do Protocolo**:
+   - Envio de pacotes via USB HID com Report ID `0x00` e tamanho de 11 bytes grava com sucesso no display.
+   - O Byte 1 (`(byte)fCpuTemp`) reflete de imediato no visor numérico (testado e confirmado com valores `77` e `65`).
+2. **Mecanismo de Watchdog / Timeout do Firmware**:
+   - O microcontrolador do water cooler desliga o display automaticamente cerca de **2 a 3 segundos** após cessar o recebimento de pacotes HID.
+   - Para manter o display permanentemente aceso, a aplicação controladora deve enviar pacotes periodicamente (intervalo recomendado: **500 ms a 1000 ms**).
+3. **Capacidade Física do Display**:
+   - O modelo físico RM-WAIB-06-ARGB possui serigrafia/interface padrão com **um único mostrador numérico de dois dígitos** (originalmente pensado para temperatura).
+   - O preenchimento dos bytes de GPU, memória e percentuais não acende elementos adicionais no modelo físico testado.
+   - **Oportunidade para o software alternativo**: O display pode exibir qualquer valor numérico de 0 a 99. Isso permite que o usuário configure o display para mostrar:
+     - Temperatura real da CPU;
+     - Temperatura da GPU;
+     - A maior temperatura entre CPU e GPU (*Hotspot*);
+     - Percentual de uso de CPU/RAM;
+     - Alternância periódica (ex: 5s temperatura da CPU, 5s temperatura da GPU).
+
