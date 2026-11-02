@@ -1,46 +1,100 @@
-# Vizzor
+# 🧊 Vizzor
 
-Investigação e possível software alternativo para o visor do water cooler Rise Mode Aura Ice Black ARGB 360 mm, RM-WAIB-06-ARGB.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)]()
+[![Hardware](https://img.shields.io/badge/Hardware-Rise%20Mode%20Aura%20Ice-00d4ff.svg)]()
+[![Size](https://img.shields.io/badge/Size-19%20KB-success.svg)]()
 
-## Estado atual
+> Software alternativo, leve e de código aberto para o visor LCD do water cooler **Rise Mode Aura Ice Black ARGB 360 mm** (`RM-WAIB-06-ARGB`).
 
-**Projeto concluído e em produção.**
-O software nativo **Vizzor v2.0** foi desenvolvido, validado e está em execução contínua no Windows do usuário, substituindo com sucesso o software e o serviço proprietários da Rise Mode.
+O software original do fabricante é notório por problemas de estabilidade, alto consumo de memória RAM (> 100 MB com 3 processos ativos) e limitação de só exibir a temperatura da CPU. O **Vizzor** foi desenvolvido do zero via engenharia reversa do protocolo USB HID para oferecer uma solução estável, com suporte a **GPU (NVIDIA/AMD)**, painel visual moderno e consumo inferior a 45 MB de RAM.
 
-O visor exibe a temperatura real do **AMD Ryzen 5 5600X** e da **NVIDIA GeForce RTX 5060 Ti** com suporte a modos configuráveis e consumo inferior a 50 MB de RAM.
+---
 
-## Funcionalidades do Vizzor v2.0
+## ⚡ Comparativo: Software Oficial vs Vizzor
 
-- **Ícone Dinâmico na Bandeja (Live Tray Icon):** Desenha a temperatura atualizada em tempo real ao lado do relógio do Windows com cores térmicas adaptativas (Ciano < 65°C, Laranja 65–80°C, Vermelho > 80°C).
-- **Múltiplos Modos de Exibição:**
-  - Temperatura da CPU (Ryzen SMU Tctl/Tdie);
-  - Temperatura da GPU (NVIDIA NVAPI Core);
-  - O Mais Quente (CPU/GPU Hotspot dinâmico);
-  - Alternância periódica (troca automática a cada 3s, 5s ou 10s);
-  - Uso da CPU (%) e Uso de Memória RAM (%);
-  - Modo Stealth (permite apagar o visor quando desejado).
-- **Controle de Frequência de Atualização:** 500 ms (rápido), 1000 ms (normal) ou 2000 ms (econômico).
-- **Alerta de Alta Temperatura:** Notificação nativa do Windows se a CPU ou GPU ultrapassar 85°C.
-- **Auto-início com o Windows:** Alternável com 1 clique no menu.
-- **Desativação Integrada:** Botão no menu para desativar o serviço antigo `tifSer` da Rise Mode.
-- **Executável Único:** Apenas 19 KB, sem instalador, com ícone de alta resolução embutido.
+| Recurso | Software Oficial (Rise Mode) | Vizzor v3.0 |
+| :--- | :---: | :---: |
+| **Exibição de Temperatura da GPU** | ❌ Não suportado | ✅ **Sim (NVIDIA & AMD)** |
+| **Modo Hotspot (Mais Quente)** | ❌ Não | ✅ **Sim (CPU vs GPU dinâmico)** |
+| **Alternância Automática** | ❌ Não | ✅ **Sim (a cada 3s, 5s ou 10s)** |
+| **Modo Relógio de Gabinete** | ❌ Não | ✅ **Sim (Minutos no display)** |
+| **Modo Stealth (Apagar Visor)** | ❌ Não | ✅ **Sim (Via menu da bandeja)** |
+| **Animação de Boot (Corrida)** | ❌ Não | ✅ **Sim (Ao inicializar)** |
+| **Alerta Visual Térmico no Visor**| ❌ Não | ✅ **Sim (Pisca visor se > 85°C)** |
+| **Ícone Dinâmico na Barra de Tarefas**| ❌ Não (ícone estático) | ✅ **Sim (Temperatura ao vivo com cores térmicas)** |
+| **Painel de Controle Visual** | ❌ Interface pesada/antiga | ✅ **Dashboard Dark Mode moderno** |
+| **Consumo de Memória RAM** | ⚠️ ~110 MB (3 processos) | 🚀 **~40 MB (Processo único)** |
+| **Tamanho do Executável** | ⚠️ ~30 MB de binários | 🚀 **19 KB (.NET nativo)** |
 
-## Estrutura do Repositório
+---
 
-- `docs/CONTEXT.md`: histórico e análise dos componentes originais.
-- `docs/PROTOCOL.md`: especificação do protocolo USB HID decodificado.
-- `docs/NEXT-STEPS.md`: registro dos marcos atingidos.
-- `src/Vizzor_NetFx/`: código-fonte da aplicação nativa .NET Framework 4.8.
-- `tools/`: ferramentas de teste, verificação e scripts auxiliares.
-- `evidence/`: cópia de segurança dos binários originais do fabricante.
+## 🖥️ Recursos e Funcionalidades
 
-## Ambiente
+### 1. Painel de Controle (Dashboard Dark Mode)
+Dê **dois cliques** no ícone da bandeja para abrir o painel de controle. Ele inclui:
+* Réplica visual estilizada do cabeçote do water cooler em tempo real;
+* Cards com telemetria detalhada de CPU (Ryzen SMU), GPU (NVAPI/AMD) e RAM;
+* Seleção rápida de modos de exibição e controle do display.
 
-Pasta Linux: /home/gabriel/dev/vizzor
-Acesso Windows: \\wsl.localhost\Ubuntu\home\gabriel\dev\vizzor
+### 2. Ícone Térmico ao Vivo na Barra de Tarefas
+O ícone do Vizzor ao lado do relógio do Windows atualiza o número da temperatura em tempo real com cores térmicas inteligentes:
+* 🔵 **Ciano:** Temperatura normal (< 65 °C)
+* 🟠 **Laranja:** Carga moderada / Jogos (65 °C – 80 °C)
+* 🔴 **Vermelho:** Alerta térmico (> 80 °C)
 
-Git, Python 3 e dotnet já estão disponíveis no Ubuntu. Não foram instalados pacotes nesta preparação.
+### 3. Efeitos Visuais no Water Cooler
+* **Bootup Sequence:** Ao iniciar o PC, o visor executa uma animação de contagem de corrida rápida (`00 -> 99`) antes de fixar na temperatura real.
+* **Alerta Visual no Gabinete:** Se o processador ou placa de vídeo atingir 85 °C, o visor físico pisca no vidro do gabinete para alertar o usuário.
+* **Modo Stealth:** Permite apagar 100% o visor do cooler para dormir ou assistir filmes no escuro.
 
-O dispositivo está conectado ao Windows. A existência da pasta no WSL não dá acesso automático ao USB. Inicialmente, analisar os arquivos offline no WSL e planejar a observação do software original no Windows.
+---
 
-Os binários e as configurações originais ficam fora do Git. Preserve-os localmente e não publique arquivos de terceiros ou históricos de sensores sem revisar seu conteúdo.
+## 🚀 Instalação Rápida
+
+1. Baixe o pacote mais recente em [Releases](dist/Vizzor_v3.0_Portable.zip).
+2. Extraia o arquivo `.zip`.
+3. Execute o `Vizzor.exe` (ou use o `Instalar.bat` para criar o atalho automático na Área de Trabalho e inicialização do Windows).
+4. *(Opcional)* Clique com o botão direito no ícone da bandeja e selecione **"Desativar Software Antigo da Rise Mode"** para remover o serviço `tifSer`.
+
+---
+
+## 🔬 Especificação Técnica do Protocolo USB HID
+
+Para desenvolvedores e entusiastas de hardware, o protocolo do visor foi decodificado:
+
+* **Vendor ID (VID):** `0xAA88` (`43656`)
+* **Product ID (PID):** `0x8666` (`34406`)
+* **Dispositivo USB:** `温度显示HID设备` (Fabricante: `铭研科技` - Mingyan Technology)
+* **Estrutura do Pacote HID:** Relatório de saída direto com **11 bytes** (Report ID `0x00`):
+
+```text
+Byte 0:  0x00 (Report ID)
+Byte 1:  Valor Exibido no Visor (0 a 99) -> Temperatura em °C, Porcentagem ou Minuto
+Byte 2:  Temperatura da GPU (°C)
+Byte 3:  Uso da CPU (%)
+Byte 4:  Uso de Memória RAM (%)
+Byte 5:  Temperatura da Placa-Mãe (°C)
+Byte 6:  Uso da GPU (%)
+Bytes 7-10: Reservado (0x00)
+```
+
+> **Watchdog do Display:** O microcontrolador do display possui um timeout de ~2 a 3 segundos. Se não receber pacotes periódicos, ele desliga a tela automaticamente para evitar que dados desatualizados permaneçam congelados.
+
+Documentação técnica completa em [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
+
+---
+
+## 🛠️ Compilação
+
+Para compilar localmente utilizando o compilador C# nativo do Windows:
+
+```cmd
+csc.exe /target:winexe /out:Vizzor.exe /win32icon:app.ico /win32manifest:app.manifest /r:LibreHardwareMonitorLib.dll /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll *.cs
+```
+
+---
+
+## 📄 Licença
+
+Distribuído sob a licença **MIT**. Veja [`LICENSE`](LICENSE) para mais detalhes.

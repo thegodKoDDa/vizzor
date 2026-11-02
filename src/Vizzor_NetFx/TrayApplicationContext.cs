@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -15,6 +16,7 @@ namespace Vizzor
         Alternating,
         CpuLoad,
         RamLoad,
+        ClockMinutes,
         StealthOff
     }
 
@@ -28,18 +30,21 @@ namespace Vizzor
         private static extern bool DestroyIcon(IntPtr hIcon);
 
         private readonly NotifyIcon _notifyIcon;
-        private readonly Timer _updateTimer;
+        private readonly System.Windows.Forms.Timer _updateTimer;
         private readonly HardwareMonitor _hardwareMonitor;
         private readonly DisplayController _displayController;
+        private readonly DashboardForm _dashboardForm;
 
         private DisplayMode _currentMode = DisplayMode.CpuTemp;
         private int _updateInterval = 1000;
         private int _alternateSeconds = 5;
         private bool _highTempAlertEnabled = true;
+        private bool _visualBlinkAlertEnabled = true;
 
         private int _alternateCounter = 0;
         private bool _alternateShowCpu = true;
         private int _logCycles = 0;
+        private bool _blinkState = false;
         private DateTime _lastAlertTime = DateTime.MinValue;
         private IntPtr _lastHIcon = IntPtr.Zero;
 
@@ -50,6 +55,7 @@ namespace Vizzor
         private ToolStripMenuItem _menuAlt;
         private ToolStripMenuItem _menuCpuLoad;
         private ToolStripMenuItem _menuRamLoad;
+        private ToolStripMenuItem _menuClock;
         private ToolStripMenuItem _menuStealth;
 
         private ToolStripMenuItem _menuInt500;
@@ -61,6 +67,7 @@ namespace Vizzor
         private ToolStripMenuItem _menuAlt10;
 
         private ToolStripMenuItem _menuAlert;
+        private ToolStripMenuItem _menuVisualBlink;
         private ToolStripMenuItem _menuAutostart;
 
         public TrayApplicationContext()
@@ -70,6 +77,8 @@ namespace Vizzor
 
             LoadSettings();
 
+            _dashboardForm = new DashboardForm(_hardwareMonitor, SetMode, delegate { return _currentMode; });
+
             _notifyIcon = new NotifyIcon
             {
                 Icon = CreateAppIcon(),
@@ -78,37 +87,69 @@ namespace Vizzor
                 ContextMenuStrip = CreateContextMenu()
             };
 
-            _updateTimer = new Timer { Interval = _updateInterval };
+            // Duplo clique abre o Dashboard
+            _notifyIcon.DoubleClick += delegate
+            {
+                _dashboardForm.Show();
+                _dashboardForm.BringToFront();
+            };
+
+            // Executa animacao de boot em thread de background antes do loop normal
+            var bootThread = new Thread(RunBootAnimation);
+            bootThread.IsBackground = true;
+            bootThread.Start();
+
+            _updateTimer = new System.Windows.Forms.Timer { Interval = _updateInterval };
             _updateTimer.Tick += OnUpdateTick;
             _updateTimer.Start();
 
             OnUpdateTick(this, EventArgs.Empty);
         }
 
+        private void RunBootAnimation()
+        {
+            try
+            {
+                if (!_displayController.EnsureConnected()) return;
+
+                // Sequencia rapida de contagem estilo boot de corrida: 00 -> 11 -> 22 ... -> 99
+                byte[] bootFrames = new byte[] { 0, 11, 22, 33, 44, 55, 66, 77, 88, 99 };
+                for (int i = 0; i < bootFrames.Length; i++)
+                {
+                    _displayController.SendPacket(bootFrames[i], 0, 0, 0, 0, 0);
+                    Thread.Sleep(85);
+                }
+            }
+            catch { }
+        }
+
         private ContextMenuStrip CreateContextMenu()
         {
             var menu = new ContextMenuStrip();
 
-            var titleItem = new ToolStripMenuItem("Vizzor v2.0 (Rise Mode Aura Ice)")
+            var openDashItem = new ToolStripMenuItem("Abrir Painel de Controle...", null, delegate {
+                _dashboardForm.Show();
+                _dashboardForm.BringToFront();
+            })
             {
-                Enabled = false,
                 Font = new Font(Control.DefaultFont, FontStyle.Bold)
             };
-            menu.Items.Add(titleItem);
+            menu.Items.Add(openDashItem);
             menu.Items.Add(new ToolStripSeparator());
 
-            // 1. Modos de Exibição
+            // 1. Modos de Exibicao
             _menuCpu = new ToolStripMenuItem("Temperatura da CPU", null, delegate { SetMode(DisplayMode.CpuTemp); });
             _menuGpu = new ToolStripMenuItem("Temperatura da GPU", null, delegate { SetMode(DisplayMode.GpuTemp); });
             _menuMax = new ToolStripMenuItem("O Mais Quente (CPU/GPU)", null, delegate { SetMode(DisplayMode.HighestTemp); });
             _menuAlt = new ToolStripMenuItem("Alternar (CPU e GPU)", null, delegate { SetMode(DisplayMode.Alternating); });
+            _menuClock = new ToolStripMenuItem("Modo Relógio (Minutos)", null, delegate { SetMode(DisplayMode.ClockMinutes); });
             _menuCpuLoad = new ToolStripMenuItem("Uso da CPU (%)", null, delegate { SetMode(DisplayMode.CpuLoad); });
             _menuRamLoad = new ToolStripMenuItem("Uso de Memória RAM (%)", null, delegate { SetMode(DisplayMode.RamLoad); });
             _menuStealth = new ToolStripMenuItem("Modo Stealth (Apagar Visor)", null, delegate { SetMode(DisplayMode.StealthOff); });
 
             var displayMenu = new ToolStripMenuItem("Modo de Exibição");
             displayMenu.DropDownItems.AddRange(new ToolStripItem[] {
-                _menuCpu, _menuGpu, _menuMax, _menuAlt,
+                _menuCpu, _menuGpu, _menuMax, _menuAlt, _menuClock,
                 new ToolStripSeparator(),
                 _menuCpuLoad, _menuRamLoad,
                 new ToolStripSeparator(),
@@ -116,7 +157,7 @@ namespace Vizzor
             });
             menu.Items.Add(displayMenu);
 
-            // 2. Intervalo de Atualização
+            // 2. Intervalo de Atualizacao
             _menuInt500 = new ToolStripMenuItem("Rápido (500 ms)", null, delegate { SetInterval(500); });
             _menuInt1000 = new ToolStripMenuItem("Normal (1 segundo)", null, delegate { SetInterval(1000); });
             _menuInt2000 = new ToolStripMenuItem("Econômico (2 segundos)", null, delegate { SetInterval(2000); });
@@ -125,7 +166,7 @@ namespace Vizzor
             intervalMenu.DropDownItems.AddRange(new ToolStripItem[] { _menuInt500, _menuInt1000, _menuInt2000 });
             menu.Items.Add(intervalMenu);
 
-            // 3. Tempo de Alternância
+            // 3. Tempo de Alternancia
             _menuAlt3 = new ToolStripMenuItem("A cada 3 segundos", null, delegate { SetAlternateSeconds(3); });
             _menuAlt5 = new ToolStripMenuItem("A cada 5 segundos", null, delegate { SetAlternateSeconds(5); });
             _menuAlt10 = new ToolStripMenuItem("A cada 10 segundos", null, delegate { SetAlternateSeconds(10); });
@@ -136,8 +177,16 @@ namespace Vizzor
 
             menu.Items.Add(new ToolStripSeparator());
 
-            // 4. Opções do Sistema
-            _menuAlert = new ToolStripMenuItem("Alerta de Alta Temperatura (> 85°C)", null, delegate {
+            // 4. Efeitos e Alertas
+            _menuVisualBlink = new ToolStripMenuItem("Efeito: Piscar Visor em Alta Temp (> 85°C)", null, delegate {
+                _visualBlinkAlertEnabled = !_visualBlinkAlertEnabled;
+                _menuVisualBlink.Checked = _visualBlinkAlertEnabled;
+                SaveSettings();
+            });
+            _menuVisualBlink.Checked = _visualBlinkAlertEnabled;
+            menu.Items.Add(_menuVisualBlink);
+
+            _menuAlert = new ToolStripMenuItem("Notificação no Windows (> 85°C)", null, delegate {
                 _highTempAlertEnabled = !_highTempAlertEnabled;
                 _menuAlert.Checked = _highTempAlertEnabled;
                 SaveSettings();
@@ -163,7 +212,7 @@ namespace Vizzor
             return menu;
         }
 
-        private void SetMode(DisplayMode mode)
+        public void SetMode(DisplayMode mode)
         {
             _currentMode = mode;
             _alternateCounter = 0;
@@ -194,6 +243,7 @@ namespace Vizzor
             _menuGpu.Checked = _currentMode == DisplayMode.GpuTemp;
             _menuMax.Checked = _currentMode == DisplayMode.HighestTemp;
             _menuAlt.Checked = _currentMode == DisplayMode.Alternating;
+            _menuClock.Checked = _currentMode == DisplayMode.ClockMinutes;
             _menuCpuLoad.Checked = _currentMode == DisplayMode.CpuLoad;
             _menuRamLoad.Checked = _currentMode == DisplayMode.RamLoad;
             _menuStealth.Checked = _currentMode == DisplayMode.StealthOff;
@@ -211,7 +261,7 @@ namespace Vizzor
         {
             HardwareMetrics metrics = _hardwareMonitor.GetMetrics();
 
-            // Verificação de Alerta de Temperatura
+            // Verificacao de Alerta de Notificacao no Windows
             if (_highTempAlertEnabled && (DateTime.Now - _lastAlertTime).TotalSeconds > 60)
             {
                 if (metrics.CpuTemp >= 85 || metrics.GpuTemp >= 85)
@@ -223,11 +273,12 @@ namespace Vizzor
                 }
             }
 
-            // Modo Stealth: simplesmente não envia pacotes para o visor apagar por watchdog
+            // Modo Stealth: simplesmente nao envia pacotes para o visor apagar por watchdog
             if (_currentMode == DisplayMode.StealthOff)
             {
                 UpdateDynamicTrayIcon(0, false);
                 _notifyIcon.Text = string.Format("Vizzor (Visor Apagado)\nCPU: {0:F0}°C | GPU: {1:F0}°C", metrics.CpuTemp, metrics.GpuTemp);
+                _dashboardForm.UpdateTelemetry(metrics, 0, _currentMode);
                 return;
             }
 
@@ -256,6 +307,10 @@ namespace Vizzor
                     float val = _alternateShowCpu ? metrics.CpuTemp : metrics.GpuTemp;
                     displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(val)));
                     break;
+                case DisplayMode.ClockMinutes:
+                    displayValue = (byte)DateTime.Now.Minute;
+                    isTempDisplay = false;
+                    break;
                 case DisplayMode.CpuLoad:
                     displayValue = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuLoad)));
                     isTempDisplay = false;
@@ -266,7 +321,18 @@ namespace Vizzor
                     break;
             }
 
-            byte cpuTemp = displayValue;
+            // Efeito Alerta Visual no Gabinete: se temp >= 85°C e o efeito estiver ativo, pisca o visor físico
+            byte sentDisplayValue = displayValue;
+            if (_visualBlinkAlertEnabled && (metrics.CpuTemp >= 85 || metrics.GpuTemp >= 85))
+            {
+                _blinkState = !_blinkState;
+                if (_blinkState)
+                {
+                    sentDisplayValue = 99; // Alerta visual de pico no display
+                }
+            }
+
+            byte cpuTemp = sentDisplayValue;
             byte gpuTemp = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.GpuTemp)));
             byte cpuLoad = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuLoad)));
             byte ramLoad = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.RamLoad)));
@@ -278,7 +344,9 @@ namespace Vizzor
             // Atualiza o Ícone Dinâmico da Bandeja com o valor ao vivo
             UpdateDynamicTrayIcon(displayValue, isTempDisplay);
 
-            // Log dos primeiros ciclos
+            // Atualiza a janela visual do Dashboard (se estiver visivel)
+            _dashboardForm.UpdateTelemetry(metrics, displayValue, _currentMode);
+
             if (_logCycles < 5)
             {
                 _logCycles++;
@@ -430,6 +498,9 @@ namespace Vizzor
 
                         object alertVal = key.GetValue("HighTempAlert");
                         if (alertVal is int) _highTempAlertEnabled = ((int)alertVal) == 1;
+
+                        object blinkVal = key.GetValue("VisualBlinkAlert");
+                        if (blinkVal is int) _visualBlinkAlertEnabled = ((int)blinkVal) == 1;
                     }
                 }
             }
@@ -448,6 +519,7 @@ namespace Vizzor
                         key.SetValue("UpdateInterval", _updateInterval);
                         key.SetValue("AlternateSeconds", _alternateSeconds);
                         key.SetValue("HighTempAlert", _highTempAlertEnabled ? 1 : 0);
+                        key.SetValue("VisualBlinkAlert", _visualBlinkAlertEnabled ? 1 : 0);
                     }
                 }
             }
