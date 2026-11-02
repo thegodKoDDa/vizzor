@@ -32,7 +32,7 @@ namespace Vizzor
         private readonly NotifyIcon _notifyIcon;
         private readonly System.Windows.Forms.Timer _updateTimer;
         private readonly HardwareMonitor _hardwareMonitor;
-        private readonly DisplayController _displayController;
+        private readonly DeviceManager _deviceManager;
         private readonly DashboardForm _dashboardForm;
 
         private DisplayMode _currentMode = DisplayMode.CpuTemp;
@@ -73,11 +73,11 @@ namespace Vizzor
         public TrayApplicationContext()
         {
             _hardwareMonitor = new HardwareMonitor();
-            _displayController = new DisplayController();
+            _deviceManager = new DeviceManager();
 
             LoadSettings();
 
-            _dashboardForm = new DashboardForm(_hardwareMonitor, SetMode, delegate { return _currentMode; });
+            _dashboardForm = new DashboardForm(_hardwareMonitor, _deviceManager, SetMode, delegate { return _currentMode; });
 
             _notifyIcon = new NotifyIcon
             {
@@ -110,13 +110,14 @@ namespace Vizzor
         {
             try
             {
-                if (!_displayController.EnsureConnected()) return;
+                if (_deviceManager.ActiveDevice == null || !_deviceManager.ActiveDevice.EnsureConnected()) return;
 
                 // Sequencia rapida de contagem estilo boot de corrida: 00 -> 11 -> 22 ... -> 99
                 byte[] bootFrames = new byte[] { 0, 11, 22, 33, 44, 55, 66, 77, 88, 99 };
+                var dummyMetrics = new HardwareMetrics();
                 for (int i = 0; i < bootFrames.Length; i++)
                 {
-                    _displayController.SendPacket(bootFrames[i], 0, 0, 0, 0, 0);
+                    _deviceManager.ActiveDevice.SendMetrics(bootFrames[i], dummyMetrics);
                     Thread.Sleep(85);
                 }
             }
@@ -135,6 +136,9 @@ namespace Vizzor
                 Font = new Font(Control.DefaultFont, FontStyle.Bold)
             };
             menu.Items.Add(openDashItem);
+
+            var deviceItem = new ToolStripMenuItem("Cooler: " + _deviceManager.ActiveDevice.DeviceName) { Enabled = false };
+            menu.Items.Add(deviceItem);
             menu.Items.Add(new ToolStripSeparator());
 
             // 1. Modos de Exibicao
@@ -339,7 +343,7 @@ namespace Vizzor
             byte mbTemp = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.MotherboardTemp)));
             byte gpuLoad = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.GpuLoad)));
 
-            bool sent = _displayController.SendPacket(cpuTemp, gpuTemp, cpuLoad, ramLoad, mbTemp, gpuLoad);
+            bool sent = _deviceManager.ActiveDevice != null && _deviceManager.ActiveDevice.SendMetrics(sentDisplayValue, metrics);
 
             // Atualiza o Ícone Dinâmico da Bandeja com o valor ao vivo
             UpdateDynamicTrayIcon(displayValue, isTempDisplay);
@@ -548,7 +552,7 @@ namespace Vizzor
         {
             _updateTimer.Stop();
             _notifyIcon.Visible = false;
-            _displayController.Dispose();
+            _deviceManager.Dispose();
             _hardwareMonitor.Dispose();
             if (_lastHIcon != IntPtr.Zero)
             {

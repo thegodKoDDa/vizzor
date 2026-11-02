@@ -8,9 +8,11 @@ namespace Vizzor
     public sealed class DashboardForm : Form
     {
         private readonly HardwareMonitor _hardwareMonitor;
+        private readonly DeviceManager _deviceManager;
         private readonly Action<DisplayMode> _onModeChanged;
         private readonly Func<DisplayMode> _getMode;
 
+        private Label _lblHeaderDevice;
         private Label _lblDisplayValue;
         private Label _lblDisplayTitle;
         private Label _lblCpuTemp;
@@ -26,9 +28,10 @@ namespace Vizzor
         private RadioButton _rbClock;
         private RadioButton _rbStealth;
 
-        public DashboardForm(HardwareMonitor monitor, Action<DisplayMode> onModeChanged, Func<DisplayMode> getMode)
+        public DashboardForm(HardwareMonitor monitor, DeviceManager deviceManager, Action<DisplayMode> onModeChanged, Func<DisplayMode> getMode)
         {
             _hardwareMonitor = monitor;
+            _deviceManager = deviceManager;
             _onModeChanged = onModeChanged;
             _getMode = getMode;
 
@@ -37,7 +40,7 @@ namespace Vizzor
 
         private void InitializeComponents()
         {
-            this.Text = "Vizzor - Painel de Controle";
+            this.Text = "Vizzor - Painel de Controle Multi-Cooler";
             this.Size = new Size(540, 480);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -49,18 +52,27 @@ namespace Vizzor
             var pnlHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 50,
+                Height = 52,
                 BackColor = Color.FromArgb(26, 30, 38)
             };
             var lblTitle = new Label
             {
-                Text = "VIZZOR  |  Rise Mode Aura Ice 360",
+                Text = "VIZZOR",
                 Font = new Font("Segoe UI", 12f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 220, 255),
                 AutoSize = true,
                 Location = new Point(20, 14)
             };
+            _lblHeaderDevice = new Label
+            {
+                Text = "Dispositivo: " + _deviceManager.ActiveDevice.DeviceName,
+                Font = new Font("Segoe UI", 8f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(160, 180, 200),
+                AutoSize = true,
+                Location = new Point(100, 18)
+            };
             pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Controls.Add(_lblHeaderDevice);
             this.Controls.Add(pnlHeader);
 
             // Container Central
@@ -222,6 +234,9 @@ namespace Vizzor
         public void UpdateTelemetry(HardwareMetrics metrics, byte displayValue, DisplayMode currentMode)
         {
             if (!this.Visible) return;
+
+            string status = _deviceManager.ActiveDevice.IsConnected ? "Conectado" : "Buscando...";
+            _lblHeaderDevice.Text = string.Format("{0} [{1}]", _deviceManager.ActiveDevice.DeviceName, status);
 
             _lblDisplayValue.Text = displayValue.ToString();
             _lblCpuTemp.Text = string.Format("{0:F1} °C", metrics.CpuTemp);

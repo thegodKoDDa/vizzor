@@ -11,6 +11,25 @@ O software original fornecido pelo fabricante é notório por travamentos consta
 
 ---
 
+## 🧊 Water Coolers Suportados (Multi-Cooler Engine)
+
+O Vizzor possui um motor de **Detecção Automática (Auto-Detect)** que escaneia o barramento USB do computador ao iniciar e ativa o driver específico para o modelo conectado:
+
+| Fabricante / Marca | Modelos Suportados | Tipo de Conexão | Status |
+| :--- | :--- | :---: | :---: |
+| **Rise Mode** | Aura Ice Black ARGB 360 mm / 240 mm (`RM-WAIB-06-ARGB`) | USB HID (`0xAA88:0x8666`) | ✅ Total |
+| **SuperFrame / Alseye** | Coolers Digitais OEM Mingyan | USB HID (`0xAA88:0x8667`, `0x8668`) | ✅ Total |
+| **DeepCool** | AK400 Digital, AK620 Digital, LS520 Digital, LS720 Digital | USB HID (`0x3633:0x0001`, `0x0002`) | ✅ Suportado |
+
+### 💡 Tem outro modelo de water cooler com visor?
+Se você tem outro water cooler com display digital (de qualquer marca):
+1. Abra o **Gerenciador de Dispositivos** do Windows -> Dispositivos de Interface Humana (HID);
+2. Encontre o cooler, clique com o botão direito -> **Propriedades** -> aba **Detalhes** -> selecione **IDs de Hardware**;
+3. Copie o `VID` e `PID` (ex: `VID_XXXX&PID_YYYY`);
+4. Abra uma **[Issue no GitHub](https://github.com/thegodKoDDa/vizzor/issues)** informando o modelo do seu cooler! Nós adicionamos o suporte oficial para o seu hardware.
+
+---
+
 ## ⚡ Comparativo: Software Oficial vs Vizzor
 
 | Recurso | Software Oficial (Rise Mode) | Vizzor v3.0 |
