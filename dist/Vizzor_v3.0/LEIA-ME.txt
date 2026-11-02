@@ -1,0 +1,53 @@
+========================================================================
+    VIZZOR - Software Alternativo para Visor Rise Mode Aura Ice 360
+========================================================================
+
+O Vizzor é um software independente, leve e de código aberto desenvolvido
+para substituir o programa original da Rise Mode no controle do visor do
+water cooler Rise Mode Aura Ice Black ARGB 360 mm (RM-WAIB-06-ARGB).
+
+------------------------------------------------------------------------
+POR QUE O PAWNIO VEM JUNTO E COMO ELES FUNCIONAM?
+------------------------------------------------------------------------
+Para ler a temperatura da CPU direto do processador (em modo Ring 0 de 
+baixo nível), o Windows exige um driver de dispositivo seguro.
+O Vizzor utiliza o driver oficial 'PawnIO' (PawnIO.sys).
+
+- O 'PawnIO' cuida do acesso direto aos sensores do processador (como o
+  SMU nos processadores AMD Ryzen e registradores MSR na Intel).
+- O 'Vizzor' faz a leitura dessas métricas, formata o pacote USB HID e 
+  transmite em tempo real para o display do water cooler a cada segundo.
+
+Sem o PawnIO, o Windows bloqueia a leitura de temperatura e o visor ficaria
+marcando 0 graus. Por isso, incluímos o 'PawnIO_setup.exe' junto no pacote!
+O script 'Instalar.bat' verifica automaticamente se você já tem o PawnIO:
+- Se já tiver (ex: de uma instalação anterior), ele não faz nada;
+- Se não tiver, ele instala o PawnIO de forma rápida e silenciosa.
+
+------------------------------------------------------------------------
+COMO USAR (VÁRIAS OPÇÕES DE INSTALAÇÃO)
+------------------------------------------------------------------------
+
+Opção 1: Instalação Automática (Recomendada)
+   - Clique duas vezes em 'Instalar.bat' como Administrador.
+   - Ele instala o PawnIO (se necessário), copia os arquivos para C:\Vizzor
+     e inicia automaticamente com o Windows na bandeja do sistema.
+
+Opção 2: Modo Portátil (Sem Instalação)
+   - Basta manter esta pasta onde quiser e dar dois cliques em 'Vizzor.exe'.
+   - O aplicativo roda diretamente da pasta atual.
+
+------------------------------------------------------------------------
+RECURSOS DISPONÍVEIS
+------------------------------------------------------------------------
+- Painel de Controle Dark Mode: dê 2 cliques no ícone da bandeja para abrir
+- Temperatura da CPU (Ryzen e Intel) e GPU (NVIDIA GeForce e AMD Radeon)
+- Modo O Mais Quente (compara CPU e GPU e exibe a maior temperatura)
+- Modo Alternado (troca entre CPU e GPU automaticamente a cada 5s)
+- Modo Relógio (exibe os minutos no visor)
+- Modo Stealth (permite apagar o visor quando desejar)
+- Alerta visual térmico no display do gabinete se passar de 85°C
+- Ícone dinâmico com números ao vivo na barra de tarefas do Windows
+
+Projeto de código aberto sob licença MIT.
+GitHub: https://github.com/thegodKoDDa/vizzor
