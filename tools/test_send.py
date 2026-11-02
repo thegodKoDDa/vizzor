@@ -50,7 +50,8 @@ def main():
     parser.add_argument("--mb-temp", type=int, default=35, help="Temperatura da placa-mãe em °C (padrão: 35)")
     parser.add_argument("--gpu-load", type=int, default=10, help="Uso de GPU em % (padrão: 10)")
     parser.add_argument("--interval", type=float, default=1.0, help="Intervalo de repetição em segundos (padrão: 1.0)")
-    parser.add_argument("--count", type=int, default=5, help="Quantidade de pacotes a enviar (padrão: 5)")
+    parser.add_argument("--count", type=int, default=5, help="Quantidade de pacotes a enviar (0 para infinito)")
+    parser.add_argument("--duration", type=int, default=0, help="Duracao em segundos para manter o envio ativo (0 usa count)")
 
     args = parser.parse_args()
 
@@ -78,12 +79,25 @@ def main():
         )
         print(f"Enviando pacote: {list(packet)}")
 
-        for i in range(args.count):
-            # No Windows hidapi, o primeiro byte é o report ID
+        start_time = time.time()
+        sent = 0
+        while True:
             bytes_written = device.write(packet)
-            print(f"[{i+1}/{args.count}] Enviados {bytes_written} bytes.")
+            sent += 1
+            elapsed = time.time() - start_time
+            print(f"[{sent}] Enviados {bytes_written} bytes ({elapsed:.1f}s decorridos)...", end="\r")
+
+            if args.duration > 0 and elapsed >= args.duration:
+                print(f"\nDuracao de {args.duration}s atingida.")
+                break
+            if args.duration == 0 and args.count > 0 and sent >= args.count:
+                print(f"\nTotal de {args.count} pacotes atingido.")
+                break
+
             time.sleep(args.interval)
 
+    except KeyboardInterrupt:
+        print("\nInterrompido pelo usuario.")
     finally:
         device.close()
         print("Conexão fechada.")
