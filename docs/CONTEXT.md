@@ -41,7 +41,7 @@ Para obter dados de temperatura confiáveis da CPU em sistemas Windows modernos 
 
 ## 4. Evolução para o Vizzor Multi-Cooler
 
-A partir da versão v3.0, o projeto foi unificado em um único executável nativo Windows em C# .NET Framework 4.8 (~69 KB), evoluindo na v3.1 e v3.2 para um motor modular de detecção automática para coolers de diversas marcas:
+A partir da versão v3.0, o projeto foi unificado em um único executável nativo Windows em C# .NET Framework 4.8 (~69 KB), evoluindo na v3.1, v3.2 e v3.3 para um motor modular de detecção automática para coolers e modo autônomo de PC (Single-File com DLL embutida):
 * **Rise Mode / Mingyan OEM**
 * **DeepCool Digital Series (AK400, AK500, AK620, CH560)**
 * **NZXT Kraken Series (Z / Elite / 2023)**

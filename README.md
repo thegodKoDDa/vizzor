@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)]()
-[![Release](https://img.shields.io/badge/Release-v3.2-success.svg)](https://github.com/thegodKoDDa/vizzor/releases/latest)
-[![Size](https://img.shields.io/badge/Size-~69%20KB-brightgreen.svg)]()
+[![Release](https://img.shields.io/badge/Release-v3.3-success.svg)](https://github.com/thegodKoDDa/vizzor/releases/latest)
+[![Size](https://img.shields.io/badge/Size-~850%20KB%20(Single--File)-brightgreen.svg)]()
 [![Language](https://img.shields.io/badge/i18n-PT--BR%20%7C%20EN--US-orange.svg)]()
 
 > **Software aberto, independente e ultraleve para displays e visores de water coolers e coolers digitais.**  
@@ -38,10 +38,12 @@ Tem um water cooler diferente ou não sabe o modelo exato?
 
 ## ⚡ Comparativo: Software Oficial vs Vizzor
 
-| Recurso | Softwares Proprietários Legados | Vizzor v3.2 |
+| Recurso | Softwares Proprietários Legados | Vizzor v3.3 |
 | :--- | :---: | :---: |
 | **Temperatura da GPU** | ❌ Não suportado | ✅ **Sim (NVIDIA GeForce & AMD Radeon)** |
 | **Temperatura do SSD NVMe M.2** | ❌ Não | ✅ **Sim (Telemetria ao vivo e no display)** |
+| **Modo Standalone (PC Monitor)** | ❌ Não | ✅ **Sim (Funciona em qualquer PC sem cooler USB)** |
+| **Telemetria de Clocks, Watts e Fans** | ❌ Não | ✅ **Sim (CPU GHz/Watts, GPU VRAM/Fans, Placa-Mãe)** |
 | **Modo Hotspot (O Mais Quente)** | ❌ Não | ✅ **Sim (Compara CPU e GPU em tempo real)** |
 | **Alternância Automática** | ❌ Não | ✅ **Sim (Alterna sensores a cada 5s)** |
 | **Modo Relógio no Visor** | ❌ Não | ✅ **Sim (Exibe os minutos atuais)** |
@@ -52,7 +54,8 @@ Tem um water cooler diferente ou não sabe o modelo exato?
 | **Diagnóstico USB Embutido** | ❌ Não | ✅ **Sim (Scanner HID e relatório em 1 clique)** |
 | **Idioma** | ⚠️ Chinês / Tradução precária | ✅ **Bilingual instantâneo (🇧🇷 PT / 🇺🇸 EN)** |
 | **Consumo de Memória RAM** | ⚠️ > 110 MB (3 processos + serviço) | 🚀 **~40 MB (Processo único, ultraleve)** |
-| **Tamanho do Executável** | ⚠️ ~30 MB a 50 MB de arquivos | 🚀 **~69 KB (.NET Framework nativo)** |
+| **Dependências Externas** | ⚠️ Instalação pesada | 🚀 **Zero (Executável único com DLL embutida)** |
+| **Tamanho do Executável** | ⚠️ ~30 MB a 50 MB de arquivos | 🚀 **~850 KB (Single-File autossuficiente)** |
 | **Poluição na Área de Trabalho** | ⚠️ Cria atalhos desnecessários | 🚀 **Zero atalhos (opera discretamente na bandeja)** |
 
 ---
@@ -74,22 +77,22 @@ Para que qualquer programa consiga ler a temperatura da CPU diretamente do proce
 
 Escolha a modalidade que melhor atende à sua necessidade:
 
-### Opção 1: Pacote Completo com Instalador Automático (Recomendado)
-*Perfeita para quem quer praticidade, sem atalhos indesejados na área de trabalho e com início automático com o Windows:*
-1. Baixe o [**Vizzor_v3.2_Completo.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_v3.2_Completo.zip);
-2. Extraia o arquivo ZIP em qualquer pasta;
-3. Clique com o botão direito em **`Instalar.bat`** e selecione **Executar como Administrador**;
-4. O script verifica o PawnIO, copia os arquivos para `C:\Vizzor`, registra o início com o Windows e inicia o Vizzor imediatamente na bandeja do sistema ao lado do relógio.
-
-### Opção 2: Executável Portátil Avulso (.exe)
-*Ideal para usuários avançados que preferem não executar scripts:*
+### Opção 1: Executável Portátil Avulso (.exe) — Mais Fácil e Direto ⭐
+*Não requer instalação nem extração de arquivos:*
 1. Baixe o [**Vizzor_Standalone.exe**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_Standalone.exe);
-2. Mantenha-o na mesma pasta que a DLL `LibreHardwareMonitorLib.dll` e com o driver PawnIO previamente instalado;
-3. Dê dois cliques em `Vizzor_Standalone.exe` para rodar diretamente.
+2. Salve em qualquer pasta (Área de Trabalho, Downloads, Pendrive);
+3. Dê dois cliques para rodar imediatamente! *(A biblioteca de telemetria já vem embutida internamente).*
+
+### Opção 2: Pacote Completo com Instalador Automático (.zip)
+*Ideal para configurar inicialização automática com o Windows e incluir o instalador do PawnIO:*
+1. Baixe o [**Vizzor_v3.3_Completo.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_v3.3_Completo.zip);
+2. Extraia em qualquer pasta;
+3. Clique com o botão direito em **`Instalar.bat`** e selecione **Executar como Administrador**;
+4. O script verifica o PawnIO, copia os arquivos para `C:\Vizzor`, registra o início com o Windows e inicia o Vizzor na bandeja do sistema ao lado do relógio.
 
 ### Opção 3: Modo Portátil Compactado (.zip)
-1. Baixe o [**Vizzor_v3.2_Completo.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_v3.2_Completo.zip);
-2. Extraia em qualquer pasta (ex: em um pendrive ou pasta Documentos);
+1. Baixe o [**Vizzor_v3.3_Completo.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_v3.3_Completo.zip);
+2. Extraia em qualquer pasta;
 3. Dê dois cliques em `Vizzor.exe`. Ele rodará diretamente da pasta atual sem mexer nas pastas do sistema.
 
 ### Opção 4: Compilação a partir do Código-Fonte (Executável Único com DLL Embutida)
