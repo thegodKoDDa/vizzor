@@ -73,7 +73,7 @@ public sealed class HardwareMonitor : IDisposable
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error reading sensors: {ex.Message}");
+            File.AppendAllText(@"C:\Vizzor\vizzor.log", $"[Error] GetMetrics: {ex.Message}\n");
         }
 
         return metrics;
@@ -81,8 +81,15 @@ public sealed class HardwareMonitor : IDisposable
 
     private static void ExtractCpuMetrics(IHardware hardware, HardwareMetrics metrics)
     {
-        // Temperatura
         var tempSensors = hardware.Sensors.Where(s => s.SensorType == SensorType.Temperature).ToList();
+        
+        // Log de debug para ver exatamente os sensores detectados
+        if (!File.Exists(@"C:\Vizzor\sensors_dump.txt"))
+        {
+            var lines = tempSensors.Select(s => $"Sensor '{s.Name}' = {s.Value}").ToList();
+            File.WriteAllLines(@"C:\Vizzor\sensors_dump.txt", lines);
+        }
+
         var preferredTemp = tempSensors.FirstOrDefault(s => s.Name.Contains("Core (Tctl/Tdie)", StringComparison.OrdinalIgnoreCase) && s.Value > 0)
                          ?? tempSensors.FirstOrDefault(s => s.Name.Contains("CCD", StringComparison.OrdinalIgnoreCase) && s.Value > 0)
                          ?? tempSensors.FirstOrDefault(s => s.Name.Contains("Package", StringComparison.OrdinalIgnoreCase) && s.Value > 0)
@@ -92,6 +99,10 @@ public sealed class HardwareMonitor : IDisposable
         if (preferredTemp?.Value is { } tempVal && tempVal > 0)
         {
             metrics.CpuTemp = tempVal;
+        }
+        else if (tempSensors.Count > 0 && tempSensors[0].Value is { } anyVal)
+        {
+            metrics.CpuTemp = anyVal;
         }
 
         // Carga

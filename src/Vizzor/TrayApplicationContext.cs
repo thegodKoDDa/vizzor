@@ -20,6 +20,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private DisplayMode _currentMode = DisplayMode.CpuTemp;
     private int _alternateCounter = 0;
     private bool _alternateShowCpu = true;
+    private int _logCycles = 0;
 
     private ToolStripMenuItem _menuCpu = null!;
     private ToolStripMenuItem _menuGpu = null!;
@@ -167,6 +168,13 @@ public sealed class TrayApplicationContext : ApplicationContext
         byte gpuLoad = (byte)Math.Clamp((int)Math.Round(metrics.GpuLoad), 0, 99);
 
         bool sent = _displayController.SendPacket(cpuTemp, gpuTemp, cpuLoad, ramLoad, mbTemp, gpuLoad);
+
+        // Log periódico dos primeiros 5 ciclos
+        if (_logCycles < 5)
+        {
+            _logCycles++;
+            File.AppendAllText(@"C:\Vizzor\vizzor.log", $"[Tick {_logCycles}] CPU={metrics.CpuTemp:F1}C, GPU={metrics.GpuTemp:F1}C, DisplayVal={displayValue}, Sent={sent}\n");
+        }
 
         // Atualiza Tooltip da bandeja
         string status = sent ? "Conectado" : "Buscando visor...";
