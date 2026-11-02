@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using LibreHardwareMonitor.Hardware;
 
 namespace Vizzor
@@ -16,6 +17,23 @@ namespace Vizzor
 
     public sealed class HardwareMonitor : IDisposable
     {
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MEMORYSTATUSEX
+        {
+            public uint dwLength;
+            public uint dwMemoryLoad;
+            public ulong ullTotalPhys;
+            public ulong ullAvailPhys;
+            public ulong ullTotalPageFile;
+            public ulong ullAvailPageFile;
+            public ulong ullTotalVirtual;
+            public ulong ullAvailVirtual;
+            public ulong ullAvailExtendedVirtual;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+
         private readonly Computer _computer;
         private bool _disposed;
 
@@ -25,8 +43,8 @@ namespace Vizzor
             {
                 IsCpuEnabled = true,
                 IsGpuEnabled = true,
-                IsMemoryEnabled = true,
-                IsMotherboardEnabled = true
+                IsMemoryEnabled = false,
+                IsMotherboardEnabled = false
             };
 
             try
@@ -43,32 +61,39 @@ namespace Vizzor
         {
             var metrics = new HardwareMetrics();
 
+            // 1. Memória RAM nativa do Windows (rápido e 100% confiável)
+            try
+            {
+                var mem = new MEMORYSTATUSEX();
+                mem.dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+                if (GlobalMemoryStatusEx(ref mem))
+                {
+                    metrics.RamLoad = mem.dwMemoryLoad;
+                }
+            }
+            catch { }
+
+            // 2. Sensores de CPU e GPU via LibreHardwareMonitor
             try
             {
                 foreach (IHardware hardware in _computer.Hardware)
                 {
-                    hardware.Update();
-
-                    switch (hardware.HardwareType)
+                    try
                     {
-                        case HardwareType.Cpu:
+                        hardware.Update();
+
+                        if (hardware.HardwareType == HardwareType.Cpu)
+                        {
                             ExtractCpuMetrics(hardware, metrics);
-                            break;
-
-                        case HardwareType.GpuNvidia:
-                        case HardwareType.GpuAmd:
-                        case HardwareType.GpuIntel:
+                        }
+                        else if (hardware.HardwareType == HardwareType.GpuNvidia ||
+                                 hardware.HardwareType == HardwareType.GpuAmd ||
+                                 hardware.HardwareType == HardwareType.GpuIntel)
+                        {
                             ExtractGpuMetrics(hardware, metrics);
-                            break;
-
-                        case HardwareType.Memory:
-                            ExtractMemoryMetrics(hardware, metrics);
-                            break;
-
-                        case HardwareType.Motherboard:
-                            ExtractMotherboardMetrics(hardware, metrics);
-                            break;
+                        }
                     }
+                    catch { }
                 }
             }
             catch (Exception ex)
@@ -115,6 +140,10 @@ namespace Vizzor
                     {
                         totalLoad = sensor.Value.Value;
                     }
+                    else if (totalLoad == 0)
+                    {
+                        totalLoad = sensor.Value.Value;
+                    }
                 }
             }
 
@@ -129,43 +158,20 @@ namespace Vizzor
                 if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue)
                 {
                     float val = sensor.Value.Value;
-                    if (val > 0 && (sensor.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0 || metrics.GpuTemp == 0))
+                    if (val > 0)
                     {
-                        metrics.GpuTemp = val;
+                        if (sensor.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0 || metrics.GpuTemp == 0)
+                        {
+                            metrics.GpuTemp = val;
+                        }
                     }
                 }
                 else if (sensor.SensorType == SensorType.Load && sensor.Value.HasValue)
                 {
-                    if (sensor.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (sensor.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0 || metrics.GpuLoad == 0)
                     {
                         metrics.GpuLoad = sensor.Value.Value;
                     }
-                }
-            }
-        }
-
-        private static void ExtractMemoryMetrics(IHardware hardware, HardwareMetrics metrics)
-        {
-            foreach (var sensor in hardware.Sensors)
-            {
-                if (sensor.SensorType == SensorType.Load && sensor.Value.HasValue)
-                {
-                    if (sensor.Name.IndexOf("Memory", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        metrics.RamLoad = sensor.Value.Value;
-                    }
-                }
-            }
-        }
-
-        private static void ExtractMotherboardMetrics(IHardware hardware, HardwareMetrics metrics)
-        {
-            foreach (var sensor in hardware.Sensors)
-            {
-                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue)
-                {
-                    metrics.MotherboardTemp = sensor.Value.Value;
-                    break;
                 }
             }
         }
