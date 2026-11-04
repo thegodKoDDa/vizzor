@@ -8,6 +8,7 @@ namespace Vizzor
         private readonly List<IDisplayDevice> _supportedDrivers;
         private IDisplayDevice _activeDevice;
         private bool _disposed;
+        private DateTime _nextDetection = DateTime.MinValue;
 
         public IDisplayDevice ActiveDevice
         {
@@ -42,6 +43,9 @@ namespace Vizzor
                 return true;
             }
 
+            if (DateTime.UtcNow < _nextDetection) return false;
+            _nextDetection = DateTime.UtcNow.AddSeconds(5);
+
             // 2. Itera sobre os drivers suportados e tenta conectar
             for (int i = 0; i < _supportedDrivers.LengthCount(); i++)
             {
@@ -49,6 +53,7 @@ namespace Vizzor
                 if (driver.EnsureConnected())
                 {
                     _activeDevice = driver;
+                    AppLog.Write("Cooler conectado: " + driver.DeviceName);
                     return true;
                 }
             }

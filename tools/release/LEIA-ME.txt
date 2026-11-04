@@ -1,0 +1,11 @@
+Vizzor v3.4
+Execute Instalar.bat. O Windows solicita elevacao para configurar sensores e inicio automatico.
+Instalacao: C:\Vizzor. Atualizacoes substituem os arquivos anteriores sem criar backups.
+Inicializacao: tarefa Vizzor-<SID> ao entrar no Windows, com atraso de 15 segundos.
+O mesmo executavel detecta o cooler e funciona como monitor de PC quando ele esta ausente.
+A busca USB se repete a cada 5 segundos. Reconectar o cooler dispensa reiniciar o Vizzor.
+Dependencias gerenciadas estao embutidas no EXE. O PawnIO continua necessario para CPU.
+A GPU e consultada em um processo auxiliar para conter falhas nativas do driver NVIDIA.
+Se a GPU falhar 3 vezes, CPU e visor continuam funcionando; reinicie o Vizzor para tentar de novo.
+Logs: %LOCALAPPDATA%\Vizzor\vizzor.log.
+Desinstalacao: Desinstalar.bat.

@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)]()
-[![Release](https://img.shields.io/badge/Release-v3.3-success.svg)](https://github.com/thegodKoDDa/vizzor/releases/latest)
-[![Size](https://img.shields.io/badge/Size-~850%20KB%20(Single--File)-brightgreen.svg)]()
+[![Release](https://img.shields.io/badge/Release-v3.4-success.svg)](https://github.com/thegodKoDDa/vizzor/releases/latest)
+[![Size](https://img.shields.io/badge/Size-~1.4%20MB%20(DLLs%20embutidas)-brightgreen.svg)]()
 [![Language](https://img.shields.io/badge/i18n-PT--BR%20%7C%20EN--US-orange.svg)]()
 
 > **Software aberto, independente e ultraleve para displays e visores de water coolers e coolers digitais.**  
@@ -11,22 +11,34 @@
 
 O **Vizzor** foi criado para substituir os softwares proprietários fornecidos pelos fabricantes (como o da Rise Mode e outros utilitários pesados), que frequentemente sofrem de travamentos constantes, consomem mais de 110 MB de RAM em múltiplos processos e limitam o visor a exibir apenas a temperatura da CPU.
 
-Construído via engenharia reversa direta sobre o protocolo **USB HID**, o Vizzor opera em um **único processo nativo**, consome **menos de 45 MB de RAM**, suporta múltiplos fabricantes e permite monitorar **CPU, GPU (NVIDIA & AMD), Memória RAM e SSD NVMe M.2**.
+Construído via engenharia reversa direta sobre o protocolo **USB HID**, o Vizzor utiliza **.NET Framework 4.8**, mantém a leitura da GPU em um **processo auxiliar isolado**, suporta múltiplos fabricantes e permite monitorar **CPU, GPU (NVIDIA & AMD), Memória RAM e SSD NVMe M.2**.
+
+## 🛠️ Novidades da v3.4
+
+* **CPU:** dependências de telemetria completas no EXE, seleção do sensor independente da ordem e `N/D` quando não há temperatura válida;
+* **Cooler USB:** busca automática a cada cinco segundos, incluindo conexão tardia e reconexão;
+* **Inicialização com o Windows:** tarefa agendada interativa com privilégios elevados e atraso de 15 segundos após o login;
+* **Estabilidade NVIDIA:** a falha do processo auxiliar de GPU não encerra a CPU, a interface nem o envio ao visor;
+* **Projeto unificado:** uma única árvore em `src/Vizzor`, uma distribuição em `dist`, atualizações sem backups automáticos e build que remove seus temporários.
+
+**É o mesmo programa com ou sem cooler:** o modo monitor de PC é ativado automaticamente quando nenhum dispositivo suportado está conectado. O nome do executável não altera o suporte USB.
 
 ---
 
 ## 🧊 Hardware Suportado (Multi-Cooler Engine)
 
-O Vizzor possui um motor de **Detecção Automática (Auto-Detect)** que escaneia o barramento USB do computador ao iniciar e conecta o driver apropriado:
+O Vizzor possui um motor de **Detecção Automática (Auto-Detect)** que procura dispositivos USB ao iniciar e repete a busca a cada cinco segundos quando não há conexão ativa:
 
 | Fabricante / Marca | Modelos Suportados | Identificação USB | Status |
 | :--- | :--- | :---: | :---: |
 | **Rise Mode** | Aura Ice Black & White ARGB 240 mm / 360 mm (`RM-WAIB-06-ARGB`) | `VID: 0xAA88`, `PID: 0x8666` | ✅ Validado no Hardware Real |
-| **SuperFrame / Alseye** | Coolers Digitais OEM Mingyan | `VID: 0xAA88`, `PID: 0x8667`, `0x8668` | ✅ Suportado |
-| **DeepCool** | AK400 Digital, AK500 Digital, AK620 Digital, CH560 Digital | `VID: 0x3633`, `PID: 0x0001`, `0x0002` | ✅ Suportado |
-| **NZXT** | Kraken Z53/Z63/Z73, Kraken Elite 240/280/360, Kraken 2023 | `VID: 0x1E71`, `PID: 0x2007`, `0x3008`, `0x2001` | ✅ Suportado |
-| **Lian Li** | Galahad II LCD, UNI FAN TL LCD | `VID: 0x0CF2`, `PID: 0xA102` | ✅ Suportado |
-| **Cooler Master** | MasterLiquid 360 Atmos / LCD Series | `VID: 0x2516`, `PID: 0x1001` | ✅ Suportado |
+| **SuperFrame / Alseye** | Coolers Digitais OEM Mingyan | `VID: 0xAA88`, `PID: 0x8667`, `0x8668` | 🧩 Driver implementado |
+| **DeepCool** | AK400 Digital, AK500 Digital, AK620 Digital, CH560 Digital | `VID: 0x3633`, `PID: 0x0001`, `0x0002` | 🧩 Driver implementado |
+| **NZXT** | Kraken Z53/Z63/Z73, Kraken Elite 240/280/360, Kraken 2023 | `VID: 0x1E71`, `PID: 0x2007`, `0x3008`, `0x2001` | 🧩 Driver implementado |
+| **Lian Li** | Galahad II LCD, UNI FAN TL LCD | `VID: 0x0CF2`, `PID: 0xA102` | 🧩 Driver implementado |
+| **Cooler Master** | MasterLiquid 360 Atmos / LCD Series | `VID: 0x2516`, `PID: 0x1001` | 🧩 Driver implementado |
+
+O Rise Mode Aura Ice foi validado em hardware real. Os demais drivers dependem do modelo e do protocolo do dispositivo; a implementação não equivale à validação física de todos os modelos.
 
 ### 🔍 Scanner e Diagnóstico USB Integrado
 Tem um water cooler diferente ou não sabe o modelo exato?
@@ -38,7 +50,7 @@ Tem um water cooler diferente ou não sabe o modelo exato?
 
 ## ⚡ Comparativo: Software Oficial vs Vizzor
 
-| Recurso | Softwares Proprietários Legados | Vizzor v3.3 |
+| Recurso | Softwares Proprietários Legados | Vizzor v3.4 |
 | :--- | :---: | :---: |
 | **Temperatura da GPU** | ❌ Não suportado | ✅ **Sim (NVIDIA GeForce & AMD Radeon)** |
 | **Temperatura do SSD NVMe M.2** | ❌ Não | ✅ **Sim (Telemetria ao vivo e no display)** |
@@ -53,9 +65,9 @@ Tem um water cooler diferente ou não sabe o modelo exato?
 | **Ícone Dinâmico na Bandeja (Tray)**| ❌ Apenas ícone estático | ✅ **Sim (Dígitos ao vivo com cores térmicas adaptativas)** |
 | **Diagnóstico USB Embutido** | ❌ Não | ✅ **Sim (Scanner HID e relatório em 1 clique)** |
 | **Idioma** | ⚠️ Chinês / Tradução precária | ✅ **Bilingual instantâneo (🇧🇷 PT / 🇺🇸 EN)** |
-| **Consumo de Memória RAM** | ⚠️ > 110 MB (3 processos + serviço) | 🚀 **~40 MB (Processo único, ultraleve)** |
-| **Dependências Externas** | ⚠️ Instalação pesada | 🚀 **Zero (Executável único com DLL embutida)** |
-| **Tamanho do Executável** | ⚠️ ~30 MB a 50 MB de arquivos | 🚀 **~850 KB (Single-File autossuficiente)** |
+| **Consumo de Memória RAM** | ⚠️ > 110 MB (3 processos + serviço) | Processo principal + auxiliar de GPU; consumo varia com o hardware |
+| **Dependências Externas** | ⚠️ Instalação pesada | **DLLs gerenciadas embutidas; requer .NET Framework 4.8 e PawnIO para CPU** |
+| **Tamanho do Executável** | ⚠️ ~30 MB a 50 MB de arquivos | **~1,4 MB (EXE com dependências gerenciadas embutidas)** |
 | **Poluição na Área de Trabalho** | ⚠️ Cria atalhos desnecessários | 🚀 **Zero atalhos (opera discretamente na bandeja)** |
 
 ---
@@ -67,9 +79,9 @@ Para que qualquer programa consiga ler a temperatura da CPU diretamente do proce
 * **O que é o `PawnIO` (`PawnIO.sys`):** É o driver oficial de hardware responsável pelo acesso aos registradores de monitoramento térmico (como o microcontrolador **SMU** nos processadores **AMD Ryzen** e registradores **MSR** na linha **Intel**).
 * **Como eles trabalham em conjunto:**
   1. O driver **PawnIO** disponibiliza os dados térmicos de baixo nível do processador com segurança e estabilidade;
-  2. O **Vizzor** lê esses sensores em microssegundos através de sua camada nativa;
+  2. O **Vizzor** lê esses sensores através da LibreHardwareMonitor;
   3. O motor de protocolo do Vizzor empacota o frame USB HID correspondente e o transmite diretamente ao water cooler a cada segundo.
-* **Sem o PawnIO**, o Windows bloqueia o acesso aos registradores de temperatura do processador e qualquer software de monitoramento fica travado marcando **0 °C**. Por essa razão, fornecemos o instalador oficial do PawnIO junto com o Vizzor. O instalador automático detecta se você já possui o PawnIO instalado e só o instala se necessário.
+* **A leitura da CPU exige o driver e os privilégios adequados.** O pacote inclui o instalador do PawnIO e configura a inicialização elevada. Dependências ausentes ou hardware não suportado também podem impedir a leitura; o painel mostra `N/D` quando não há temperatura válida.
 
 ---
 
@@ -78,31 +90,43 @@ Para que qualquer programa consiga ler a temperatura da CPU diretamente do proce
 Escolha a modalidade que melhor atende à sua necessidade:
 
 ### Opção 1: Executável Portátil Avulso (.exe) — Mais Fácil e Direto ⭐
-*Não requer instalação nem extração de arquivos:*
-1. Baixe o [**Vizzor_Standalone.exe**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_Standalone.exe);
+*O aplicativo é portátil; a leitura da CPU requer o driver PawnIO instalado:*
+1. Baixe o [**Vizzor.exe**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor.exe);
 2. Salve em qualquer pasta (Área de Trabalho, Downloads, Pendrive);
-3. Dê dois cliques para rodar imediatamente! *(A biblioteca de telemetria já vem embutida internamente).*
+3. Dê dois cliques e aceite a elevação do Windows. As dependências gerenciadas já estão embutidas; para os sensores da CPU, o PawnIO precisa estar instalado.
 
 ### Opção 2: Pacote Completo com Instalador Automático (.zip)
 *Ideal para configurar inicialização automática com o Windows e incluir o instalador do PawnIO:*
-1. Baixe o [**Vizzor_v3.3_Completo.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_v3.3_Completo.zip);
+1. Baixe o [**Vizzor.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor.zip);
 2. Extraia em qualquer pasta;
 3. Clique com o botão direito em **`Instalar.bat`** e selecione **Executar como Administrador**;
 4. O script verifica o PawnIO, copia os arquivos para `C:\Vizzor`, registra o início com o Windows e inicia o Vizzor na bandeja do sistema ao lado do relógio.
 
 ### Opção 3: Modo Portátil Compactado (.zip)
-1. Baixe o [**Vizzor_v3.3_Completo.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor_v3.3_Completo.zip);
+1. Baixe o [**Vizzor.zip**](https://github.com/thegodKoDDa/vizzor/releases/latest/download/Vizzor.zip);
 2. Extraia em qualquer pasta;
 3. Dê dois cliques em `Vizzor.exe`. Ele rodará diretamente da pasta atual sem mexer nas pastas do sistema.
 
 ### Opção 4: Compilação a partir do Código-Fonte (Executável Único com DLL Embutida)
-O Vizzor utiliza o compilador nativo do Windows (`csc.exe`), embutindo a biblioteca de hardware como recurso interno para gerar um executável 100% independente (Single-File):
-```cmd
+O único projeto é `src/Vizzor/Vizzor.csproj`, direcionado ao .NET Framework 4.8. Com o SDK .NET instalado, execute no Windows:
+
+```powershell
 git clone https://github.com/thegodKoDDa/vizzor.git
-cd vizzor\src\Vizzor_NetFx
-C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:Vizzor.exe /resource:..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll,LibreHardwareMonitorLib.dll /r:..\..\dist\Vizzor_v3.0\LibreHardwareMonitorLib.dll /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll *.cs
+cd vizzor
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_release.ps1
 ```
-*O executável gerado `Vizzor.exe` funciona de forma autônoma em qualquer pasta sem exigir arquivos ou DLLs externas ao lado.*
+
+O build atualiza `dist` e remove seus temporários. O executável inclui LibreHardwareMonitorLib, HidSharp, RAMSPDToolkit-NDD e System.CodeDom. O PawnIO é um driver separado e precisa estar instalado para os sensores de CPU.
+
+O ZIP só é gerado quando solicitado com `-Archive`, substituindo o arquivo único `dist.zip`. Não são criadas pastas de releases antigos.
+
+Para executar os testes:
+
+```powershell
+dotnet build tests/RegressionTests.csproj -c Release
+.\tests\bin\Release\net48\RegressionTests.exe
+python tests/run_tests.py
+```
 
 ---
 
@@ -150,7 +174,7 @@ O Vizzor vive discretamente na barra inferior do Windows, na área de notificaç
   * **Sair do Vizzor**
 
 ### 2. Painel de Controle Dark Mode e Modo Standalone (PC Telemetry)
-* **Funciona com ou sem Water Cooler:** Mesmo que você não possua um cooler com visor digital USB, o Vizzor atua como um **monitor de hardware de sistema completo e ultraleve**, consumindo menos de 40 MB de RAM (substituindo ferramentas pesadas como NZXT CAM ou iCUE).
+* **Funciona com ou sem Water Cooler:** Mesmo que você não possua um cooler com visor digital USB, o Vizzor atua como um **monitor de hardware de sistema completo e ultraleve**, com a mesma interface e os mesmos sensores disponíveis no modo com cooler.
 * **Identificação Automática do Modelo:** Se um cooler suportado estiver conectado, o cabeçalho exibe o modelo correspondente. Se não houver cooler USB, ativa elegantemente o **`🖥️ Monitor de Hardware do Sistema (Modo Standalone)`**.
 * **Telemetria Expandida em Tempo Real:**
   * **CPU:** Modelo exato, Temperatura (°C), Carga (%), Clock dinâmico (GHz), Consumo em Watts (W) e Voltagem VCore (V);
@@ -171,10 +195,17 @@ Se qualquer componente monitorado ultrapassar **85 °C**, o display físico pisc
 
 ## ❓ Perguntas Frequentes & Solução de Problemas
 
-#### A temperatura da CPU está marcando 0 °C no mostrador. O que fazer?
-Isso indica que o driver de kernel Ring 0 não foi instalado ou o Windows não concedeu privilégios de administrador:
+#### A temperatura da CPU está indisponível ou em 0 °C no visor. O que fazer?
+O painel mostra `N/D` quando não há leitura válida. Verifique o driver, os privilégios e o log:
 1. Certifique-se de executar o `Instalar.bat` como **Administrador** para instalar o `PawnIO`;
-2. Se estiver rodando o `.exe` avulso, execute o `PawnIO_setup.exe` uma única vez.
+2. Se estiver rodando o `.exe` avulso, instale o PawnIO uma única vez e aceite a elevação do Windows;
+3. Consulte `%LOCALAPPDATA%\Vizzor\vizzor.log` para identificar falhas de dependências ou sensores. O log tem tamanho limitado a aproximadamente 1 MB.
+
+#### O programa aparece em modo standalone mesmo com cooler?
+É o modo automático quando nenhum dispositivo está conectado ao aplicativo. A busca USB agora se repete a cada cinco segundos; use o diagnóstico USB do painel para verificar o VID/PID e a conexão.
+
+#### Uma falha NVIDIA pode derrubar o visor?
+A leitura da GPU roda em processo separado. Se esse processo falhar, CPU e USB continuam ativos. Após três falhas, reinicie o Vizzor para tentar a leitura da GPU novamente.
 
 #### O Vizzor cria atalhos na Área de Trabalho?
 **Não.** O Vizzor foi projetado para manter a sua Área de Trabalho 100% limpa. Ele opera diretamente a partir da bandeja do sistema (perto do relógio do Windows), exatamente como deve ser um software de monitoramento de hardware.
@@ -188,10 +219,10 @@ Basta clicar duas vezes em **`Desinstalar.bat`** (como Administrador). Ele fecha
 
 **Vizzor** is an open-source, ultra-lightweight hardware monitor and USB HID display controller designed to replace bulky vendor utilities for AIO water coolers and digital coolers (such as the *Rise Mode Aura Ice 360*, *DeepCool Digital*, *NZXT Kraken*, *Lian Li Galahad II LCD*, and *Cooler Master Atmos*).
 
-* **Memory Footprint:** Less than 45 MB RAM (compared to 110+ MB with 3 background processes from proprietary apps).
-* **Binary Size:** Just ~69 KB native Windows executable.
+* **Fault isolation:** GPU telemetry runs in a separate worker so native GPU driver crashes do not stop CPU monitoring or USB updates.
+* **Binary Size:** About 1.4 MB with managed dependencies embedded; .NET Framework 4.8 and the PawnIO CPU driver are required.
 * **Sensors Supported:** CPU (AMD Ryzen & Intel), GPU (NVIDIA & AMD), System RAM, and NVMe M.2 SSDs.
-* **Multi-Cooler Engine:** Automatically detects connected USB HID coolers and binds the corresponding driver.
+* **Multi-Cooler Engine:** Automatically detects supported USB HID coolers and retries every five seconds while disconnected. Rise Mode Aura Ice has been validated on physical hardware.
 * **Interactive Features:** Manual slider display test (0-99), built-in USB HID diagnostics scanner with one-click issue reporting, dynamic taskbar tray numbers with adaptive thermal colors, and high-temp glass alerts (> 85 °C).
 * **Bilingual UI:** Click the language button in the dashboard to toggle between English and Portuguese.
 
@@ -200,9 +231,8 @@ Basta clicar duas vezes em **`Desinstalar.bat`** (como Administrador). Ele fecha
 ## 🔬 Documentação Técnica
 
 Para desenvolvedores e entusiastas de engenharia reversa:
-* [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Arquitetura de software, modelo de threads e integração de kernel;
+* [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Arquitetura, processos, inicialização e integração de kernel;
 * [`docs/PROTOCOL.md`](docs/PROTOCOL.md) — Especificações de pacotes USB HID de cada fabricante decodificado;
-* [`docs/ROADMAP.md`](docs/NEXT-STEPS.md) — Histórico de marcos concluídos e planos futuros.
 
 ---
 

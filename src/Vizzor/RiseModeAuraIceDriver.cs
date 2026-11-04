@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
 namespace Vizzor
@@ -39,14 +41,20 @@ namespace Vizzor
                     HidHelper.FILE_FLAG_OVERLAPPED,
                     IntPtr.Zero);
 
-                if (ptr == HidHelper.INVALID_HANDLE_VALUE) return false;
+                if (ptr == HidHelper.INVALID_HANDLE_VALUE)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    AppLog.Write("Falha ao abrir Rise Mode HID: " + new Win32Exception(error).Message);
+                    return false;
+                }
 
                 _handle = new SafeFileHandle(ptr, true);
                 _stream = new FileStream(_handle, FileAccess.ReadWrite, 64, true);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Write("Rise Mode HID: " + ex.Message);
                 Close();
                 return false;
             }
@@ -72,8 +80,9 @@ namespace Vizzor
                 _stream.Flush();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Write("Rise Mode HID: " + ex.Message);
                 Close();
                 return false;
             }

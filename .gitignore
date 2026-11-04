@@ -1,6 +1,3 @@
-evidence/vendor/
-evidence/captures/*
-!evidence/captures/.gitkeep
 work/
 .env
 .venv/
@@ -12,3 +9,5 @@ obj/
 **/obj/
 .vs/
 **/.vs/
+# Pacote opcional; apenas a distribuicao atual fica no repositorio.
+/dist.zip

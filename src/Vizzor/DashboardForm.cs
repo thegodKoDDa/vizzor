@@ -495,7 +495,9 @@ namespace Vizzor
             _lblDisplayValue.Text = displayValue.ToString();
 
             // CPU
-            _lblCpuTemp.Text = string.Format("{0:F1} °C ({1:F0}%)", metrics.CpuTemp, metrics.CpuLoad);
+            _lblCpuTemp.Text = metrics.CpuTemp > 0
+                ? string.Format("{0:F1} °C ({1:F0}%)", metrics.CpuTemp, metrics.CpuLoad)
+                : string.Format("N/D ({0:F0}%)", metrics.CpuLoad);
             string cpuName = !string.IsNullOrEmpty(metrics.CpuName) ? metrics.CpuName : "CPU";
             string cpuClock = metrics.CpuClockGhz > 0 ? string.Format("{0:F2} GHz", metrics.CpuClockGhz) : "";
             string cpuPower = metrics.CpuPowerWatts > 0 ? string.Format("{0:F0} W", metrics.CpuPowerWatts) : "";

@@ -10,6 +10,7 @@ namespace Vizzor
         // CPU
         public string CpuName { get; set; }
         public float CpuTemp { get; set; }
+        public string CpuTemperatureSensor { get; set; }
         public float CpuLoad { get; set; }
         public float CpuClockGhz { get; set; }
         public float CpuPowerWatts { get; set; }
@@ -38,10 +39,25 @@ namespace Vizzor
         public string MotherboardName { get; set; }
         public float MotherboardTemp { get; set; }
         public float CpuFanRpm { get; set; }
+
+        // Diagnóstico de Driver de Kernel
+        public bool IsPawnIoNeeded { get; set; }
     }
 
     public sealed class HardwareMonitor : IDisposable
     {
+        public static bool IsPawnIoAvailable
+        {
+            get
+            {
+                try
+                {
+                    return File.Exists(@"C:\Program Files\PawnIO\PawnIO.sys") ||
+                           File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"PawnIO\PawnIO.sys"));
+                }
+                catch { return false; }
+            }
+        }
         [StructLayout(LayoutKind.Sequential)]
         private struct MEMORYSTATUSEX
         {
@@ -61,26 +77,28 @@ namespace Vizzor
 
         private readonly Computer _computer;
         private bool _disposed;
+        private readonly GpuMonitor _gpuMonitor;
 
         public HardwareMonitor()
         {
             _computer = new Computer
             {
                 IsCpuEnabled = true,
-                IsGpuEnabled = true,
+                IsGpuEnabled = false,
                 IsStorageEnabled = true,
                 IsMemoryEnabled = false,
                 IsMotherboardEnabled = true,
                 IsControllerEnabled = true
             };
 
+            _gpuMonitor = new GpuMonitor();
             try
             {
                 _computer.Open();
             }
             catch (Exception ex)
             {
-                try { File.AppendAllText(@"C:\Vizzor\vizzor.log", "[Error] Computer.Open: " + ex.Message + "\n"); } catch { }
+                AppLog.Write("Computer.Open: " + ex);
             }
         }
 
@@ -88,7 +106,7 @@ namespace Vizzor
         {
             var metrics = new HardwareMetrics();
 
-            // 1. Memória RAM nativa do Windows (Win32 GlobalMemoryStatusEx)
+            // 1. Memória RAM nativa do Windows (Win32 GlobalMemoryStatusEx - rápido e 100% confiável)
             try
             {
                 var mem = new MEMORYSTATUSEX();
@@ -103,7 +121,7 @@ namespace Vizzor
             }
             catch { }
 
-            // 2. Sensores via LibreHardwareMonitor
+            // 2. Sensores de CPU, GPU, Storage e Placa-Mãe via LibreHardwareMonitor
             try
             {
                 foreach (IHardware hardware in _computer.Hardware)
@@ -136,7 +154,14 @@ namespace Vizzor
             }
             catch (Exception ex)
             {
-                try { File.AppendAllText(@"C:\Vizzor\vizzor.log", "[Error] GetMetrics: " + ex.Message + "\n"); } catch { }
+                AppLog.Write("GetMetrics: " + ex);
+            }
+
+            _gpuMonitor.CopyTo(metrics);
+
+            if (metrics.CpuTemp == 0 && !IsPawnIoAvailable)
+            {
+                metrics.IsPawnIoNeeded = true;
             }
 
             return metrics;
@@ -150,6 +175,7 @@ namespace Vizzor
             }
 
             float bestTemp = 0;
+            int bestPriority = 0;
             float totalLoad = 0;
             float maxClock = 0;
             float powerWatts = 0;
@@ -162,21 +188,13 @@ namespace Vizzor
 
                 if (sensor.SensorType == SensorType.Temperature && val > 0)
                 {
-                    if (sensor.Name.IndexOf("Tctl/Tdie", StringComparison.OrdinalIgnoreCase) >= 0)
+                    int priority = CpuTemperatureSelector.Priority(sensor.Name);
+                    if (!float.IsNaN(val) && !float.IsInfinity(val) &&
+                        (priority > bestPriority || (priority == bestPriority && val > bestTemp)))
                     {
                         bestTemp = val;
-                    }
-                    else if (bestTemp == 0 && sensor.Name.IndexOf("CCD", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        bestTemp = val;
-                    }
-                    else if (bestTemp == 0 && sensor.Name.IndexOf("Package", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        bestTemp = val;
-                    }
-                    else if (bestTemp == 0)
-                    {
-                        bestTemp = val;
+                        metrics.CpuTemperatureSensor = sensor.Name;
+                        bestPriority = priority;
                     }
                 }
                 else if (sensor.SensorType == SensorType.Load)
@@ -217,7 +235,7 @@ namespace Vizzor
             metrics.CpuVoltage = (float)Math.Round(voltage, 2);
         }
 
-        private static void ExtractGpuMetrics(IHardware hardware, HardwareMetrics metrics)
+        internal static void ExtractGpuMetrics(IHardware hardware, HardwareMetrics metrics)
         {
             if (string.IsNullOrEmpty(metrics.GpuName))
             {
@@ -301,6 +319,7 @@ namespace Vizzor
                 metrics.MotherboardName = CleanHardwareName(hardware.Name);
             }
 
+            // Placas-mãe costumam ter sensores no hardware principal ou em sub-hardware (chips Super I/O)
             InspectSensorsForMotherboard(hardware, metrics);
 
             foreach (var sub in hardware.SubHardware)
@@ -351,6 +370,7 @@ namespace Vizzor
         {
             if (!_disposed)
             {
+                _gpuMonitor.Dispose();
                 try { _computer.Close(); } catch { }
                 _disposed = true;
             }

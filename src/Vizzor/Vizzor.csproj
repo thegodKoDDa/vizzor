@@ -1,24 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <TargetFramework>net48</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <AssemblyName>Vizzor</AssemblyName>
+    <Version>3.4.0</Version>
+    <AssemblyVersion>3.4.0.0</AssemblyVersion>
+    <FileVersion>3.4.0.0</FileVersion>
+    <InformationalVersion>3.4.0</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Product>Vizzor</Product>
+    <Description>Hardware monitor and USB cooler display controller</Description>
+    <LangVersion>7.3</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
-
   <ItemGroup>
-    <Reference Include="LibreHardwareMonitorLib">
-      <HintPath>libs\LibreHardwareMonitorLib.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="LibreHardwareMonitorLib"><HintPath>libs\LibreHardwareMonitorLib.dll</HintPath><Private>false</Private></Reference>
+    <EmbeddedResource Include="libs\LibreHardwareMonitorLib.dll" LogicalName="LibreHardwareMonitorLib.dll" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="HidSharp" Version="2.6.2" GeneratePathProperty="true" />
+    <PackageReference Include="RAMSPDToolkit-NDD" Version="1.3.2" GeneratePathProperty="true" />
   </ItemGroup>
-
+  <Target Name="EmbedDependencies" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.dll'" LogicalName="%(Filename)%(Extension)" />
+    </ItemGroup>
+  </Target>
 </Project>
