@@ -70,18 +70,16 @@ namespace Vizzor
             }
         }
 
+        public static byte[] BuildPacket(byte displayValue, HardwareMetrics metrics)
+        {
+            return RiseModeAuraIceDriver.BuildPacket(displayValue, metrics);
+        }
+
         public bool SendMetrics(byte displayValue, HardwareMetrics metrics)
         {
             if (!EnsureConnected() || _stream == null) return false;
 
-            byte[] buffer = new byte[11];
-            buffer[0] = 0x00;
-            buffer[1] = displayValue;
-            buffer[2] = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.GpuTemp)));
-            buffer[3] = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.CpuLoad)));
-            buffer[4] = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.RamLoad)));
-            buffer[5] = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.MotherboardTemp)));
-            buffer[6] = (byte)Math.Max(0, Math.Min(99, (int)Math.Round(metrics.GpuLoad)));
+            byte[] buffer = BuildPacket(displayValue, metrics);
 
             try
             {

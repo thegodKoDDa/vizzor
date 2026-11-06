@@ -28,7 +28,7 @@ class RegressionTests
                 using (var buffer = new MemoryStream()) { stream.CopyTo(buffer); return Assembly.Load(buffer.ToArray()); }
             }
         };
-        try { Run(); Console.WriteLine("PASS: CPU sensor selection, USB retry, embedded dependencies, GPU process failure isolation"); return 0; }
+        try { Run(); Console.WriteLine("PASS: CPU sensor selection, USB retry, protocols, localization, embedded dependencies, GPU process failure isolation"); return 0; }
         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
     }
 
@@ -74,6 +74,37 @@ class RegressionTests
         Assert(Extract(Sensor("Core #1", 40), Sensor("Core #2", 60)).CpuTemp == 60, "Hottest core fallback");
         Assert(Extract(Sensor("CCD1 (Tdie)", 43), Sensor("CPU Package", 55)).CpuTemp == 55, "Package before individual CCD");
         Assert(Extract().CpuTemp == 0, "Unavailable sensor");
+
+        // Valida geradores de pacotes USB HID reais dos drivers C#
+        var sampleMetrics = new HardwareMetrics
+        {
+            CpuTemp = 52f,
+            GpuTemp = 44f,
+            CpuLoad = 25f,
+            RamLoad = 60f,
+            MotherboardTemp = 35f,
+            GpuLoad = 15f
+        };
+        byte[] risePkt = RiseModeAuraIceDriver.BuildPacket(52, sampleMetrics);
+        Assert(risePkt.Length == 11 && risePkt[0] == 0x00 && risePkt[1] == 52 && risePkt[2] == 44 && risePkt[3] == 25 && risePkt[4] == 60 && risePkt[5] == 35 && risePkt[6] == 15, "Rise Mode packet layout");
+        byte[] mingyanPkt = MingyanGenericDriver.BuildPacket(52, sampleMetrics);
+        Assert(mingyanPkt.Length == 11 && mingyanPkt[1] == 52 && mingyanPkt[2] == 44, "Mingyan packet layout");
+        byte[] deepcoolPkt = DeepCoolDigitalDriver.BuildPacket(52, sampleMetrics);
+        Assert(deepcoolPkt.Length == 64 && deepcoolPkt[0] == 0x00 && deepcoolPkt[1] == 0xDA && deepcoolPkt[2] == 52 && deepcoolPkt[3] == 25 && deepcoolPkt[4] == 0x01, "DeepCool packet layout");
+        byte[] nzxtPkt = NzxtKrakenDriver.BuildPacket(52, sampleMetrics);
+        Assert(nzxtPkt.Length == 64 && nzxtPkt[0] == 0x00 && nzxtPkt[1] == 0x70 && nzxtPkt[2] == 0x01 && nzxtPkt[3] == 52 && nzxtPkt[4] == 44, "NZXT packet layout");
+        byte[] lianliPkt = LianLiDriver.BuildPacket(52, sampleMetrics);
+        Assert(lianliPkt.Length == 64 && lianliPkt[0] == 0x00 && lianliPkt[1] == 0xE0 && lianliPkt[2] == 52 && lianliPkt[3] == 44, "Lian Li packet layout");
+        byte[] cmPkt = CoolerMasterDriver.BuildPacket(52, sampleMetrics);
+        Assert(cmPkt.Length == 64 && cmPkt[0] == 0x00 && cmPkt[1] == 0x55 && cmPkt[2] == 52 && cmPkt[3] == 44, "Cooler Master packet layout");
+
+        // Valida localizacao bilingue
+        Strings.CurrentLanguage = Language.PtBr;
+        Assert(Strings.NotAvailable == "N/D" && Strings.DisplayTitleOff == "DESLIGADO", "PT-BR localization");
+        Strings.CurrentLanguage = Language.EnUs;
+        Assert(Strings.NotAvailable == "N/A" && Strings.DisplayTitleOff == "STEALTH OFF", "EN-US localization");
+        Strings.CurrentLanguage = Language.PtBr;
+
         var manager = (DeviceManager)FormatterServices.GetUninitializedObject(typeof(DeviceManager));
         var driver = new FakeDriver();
         typeof(DeviceManager).GetField("_supportedDrivers", BindingFlags.NonPublic | BindingFlags.Instance)

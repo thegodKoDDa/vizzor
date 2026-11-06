@@ -1,6 +1,6 @@
 # Protocolos de Comunicação USB HID - Vizzor Multi-Cooler
 
-Este documento descreve as especificações técnicas, identificadores de hardware (VID/PID) e a estrutura dos pacotes USB HID decodificados para os water coolers e coolers digitais suportados pelo **Vizzor**.
+Este documento descreve as especificações técnicas, identificadores de hardware (VID/PID) e a estrutura dos pacotes USB HID implementados nos drivers do **Vizzor**.
 
 ---
 
@@ -21,18 +21,18 @@ Este documento descreve as especificações técnicas, identificadores de hardwa
 | :---: | :---: | :--- | :--- |
 | **0** | `byte` | HID Report ID (sempre `0x00`) | `0x00` |
 | **1** | `byte` | Valor no Mostrador Físico (0 a 99) | `0x2E` (46 °C / 46%) |
-| **2** | `byte` | Temperatura da GPU (°C) | `0x2B` (43 °C) |
-| **3** | `byte` | Uso da CPU (%) | `0x14` (20%) |
-| **4** | `byte` | Uso da Memória RAM (%) | `0x32` (50%) |
-| **5** | `byte` | Temperatura da Placa-Mãe (°C) | `0x22` (34 °C) |
-| **6** | `byte` | Uso da GPU (%) | `0x0F` (15%) |
+| **2** | `byte` | Temperatura da GPU (°C, 0 a 99) | `0x2B` (43 °C) |
+| **3** | `byte` | Uso da CPU (%, 0 a 99) | `0x14` (20%) |
+| **4** | `byte` | Uso da Memória RAM (%, 0 a 99) | `0x32` (50%) |
+| **5** | `byte` | Temperatura da Placa-Mãe (°C, 0 a 99) | `0x22` (34 °C) |
+| **6** | `byte` | Uso da GPU (%, 0 a 99) | `0x0F` (15%) |
 | **7..10**| `byte` | Reservado / Padding | `0x00` |
 
 ---
 
 ## 2. DeepCool Digital Series
 
-* **Modelos:** AK400 Digital, AK500 Digital, AK620 Digital, CH560 Digital
+* **Modelos:** AK400 Digital, AK500 Digital, AK620 Digital, LS720 Digital, CH560 Digital
 * **Vendor ID (VID):** `0x3633` (`13875`)
 * **Product ID (PID):** `0x0001`, `0x0002`, `0x0003`
 * **Tamanho do Relatório HID:** 64 bytes
@@ -41,13 +41,12 @@ Este documento descreve as especificações técnicas, identificadores de hardwa
 ### Estrutura do Pacote (64 bytes):
 | Offset | Valor | Descrição |
 | :---: | :---: | :--- |
-| **0** | `0x10` | Cabeçalho do Protocolo DeepCool |
-| **1** | `0x01` | Comando de Exibição Térmica |
-| **2** | `0x00` | Tipo de Sensor (`0x00` = CPU Temp, `0x01` = Carga %) |
-| **3** | `displayVal` | Valor numérico inteiro a ser exibido no display (0 a 99) |
-| **4** | `0x01` | Flag do indicador gráfico de barra / LED |
-| **5** | `0x00` | Unidade (`0x00` = Celsius °C) |
-| **6..63** | `0x00` | Padding com zeros |
+| **0** | `0x00` | Report ID |
+| **1** | `0xDA` | Cabeçalho do Protocolo DeepCool |
+| **2** | `displayVal` | Valor numérico inteiro a ser exibido no display (0 a 99) |
+| **3** | `cpuLoad` | Barra de carga da CPU (0 a 100) |
+| **4** | `0x01` | Flag de modo Celsius / Ativo |
+| **5..63** | `0x00` | Padding com zeros |
 
 ---
 
@@ -61,11 +60,12 @@ Este documento descreve as especificações técnicas, identificadores de hardwa
 ### Estrutura do Pacote (64 bytes):
 | Offset | Valor | Descrição |
 | :---: | :---: | :--- |
-| **0** | `0x02` | Report ID do display NZXT |
-| **1** | `0x4C` | Opcode de telemetria ('L') |
-| **2** | `0x01` | Sub-comando de exibição rápida |
-| **3** | `displayVal` | Valor numérico (0 a 99) |
-| **4..63** | `0x00` | Padding com zeros |
+| **0** | `0x00` | Report ID |
+| **1** | `0x70` | Header de controle de telemetria |
+| **2** | `0x01` | Sub-comando de exibição |
+| **3** | `displayVal` | Valor numérico principal (0 a 99) |
+| **4** | `gpuTemp` | Temperatura da GPU (0 a 100) |
+| **5..63** | `0x00` | Padding com zeros |
 
 ---
 
@@ -73,16 +73,17 @@ Este documento descreve as especificações técnicas, identificadores de hardwa
 
 * **Modelos:** Galahad II LCD, UNI FAN TL LCD
 * **Vendor ID (VID):** `0x0CF2` (`3314`)
-* **Product ID (PID):** `0xA102`
+* **Product ID (PID):** `0xA102`, `0xA100`, `0xA101`
 * **Tamanho do Relatório HID:** 64 bytes
 
 ### Estrutura do Pacote (64 bytes):
 | Offset | Valor | Descrição |
 | :---: | :---: | :--- |
-| **0** | `0xE0` | Report ID Lian Li LCD |
-| **1** | `0x01` | Comando de telemetria |
-| **2** | `displayVal` | Valor numérico a ser exibido no mostrador (0 a 99) |
-| **3..63** | `0x00` | Padding com zeros |
+| **0** | `0x00` | Report ID |
+| **1** | `0xE0` | Cabeçalho Lian Li LCD |
+| **2** | `displayVal` | Valor numérico principal (0 a 99) |
+| **3** | `gpuTemp` | Temperatura da GPU (0 a 100) |
+| **4..63** | `0x00` | Padding com zeros |
 
 ---
 
@@ -90,15 +91,14 @@ Este documento descreve as especificações técnicas, identificadores de hardwa
 
 * **Modelos:** MasterLiquid 360 Atmos / LCD Series
 * **Vendor ID (VID):** `0x2516` (`9494`)
-* **Product ID (PID):** `0x1001`
+* **Product ID (PID):** `0x1001`, `0x1002`, `0x0100`
 * **Tamanho do Relatório HID:** 64 bytes
 
 ### Estrutura do Pacote (64 bytes):
 | Offset | Valor | Descrição |
 | :---: | :---: | :--- |
-| **0** | `0x01` | Report ID Cooler Master |
-| **1** | `0x55` | Magic Byte 1 |
-| **2** | `0xAA` | Magic Byte 2 |
-| **3** | `0x02` | Código de comando térmico |
-| **4** | `displayVal` | Valor numérico (0 a 99) |
-| **5..63** | `0x00` | Padding com zeros |
+| **0** | `0x00` | Report ID |
+| **1** | `0x55` | Cabeçalho Cooler Master |
+| **2** | `displayVal` | Valor numérico principal (0 a 99) |
+| **3** | `gpuTemp` | Temperatura da GPU (0 a 100) |
+| **4..63** | `0x00` | Padding com zeros |

@@ -70,17 +70,23 @@ namespace Vizzor
             }
         }
 
-        public bool SendMetrics(byte displayValue, HardwareMetrics metrics)
+        public static byte[] BuildPacket(byte displayValue, HardwareMetrics metrics)
         {
-            if (!EnsureConnected() || _stream == null) return false;
-
             // Frame de telemetria do Kraken Z / Elite (64 bytes)
             byte[] buffer = new byte[64];
             buffer[0] = 0x00; // Report ID
             buffer[1] = 0x70; // Header de controle
             buffer[2] = 0x01;
-            buffer[3] = displayValue; // Temperatura principal
+            buffer[3] = (byte)Math.Max(0, Math.Min(99, (int)displayValue)); // Temperatura principal
             buffer[4] = (byte)Math.Max(0, Math.Min(100, (int)Math.Round(metrics.GpuTemp)));
+            return buffer;
+        }
+
+        public bool SendMetrics(byte displayValue, HardwareMetrics metrics)
+        {
+            if (!EnsureConnected() || _stream == null) return false;
+
+            byte[] buffer = BuildPacket(displayValue, metrics);
 
             try
             {

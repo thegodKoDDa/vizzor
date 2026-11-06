@@ -30,8 +30,8 @@ namespace Vizzor
             if (IsConnected) return true;
             Close();
 
-            // Tenta PID 0x0001 (AK Series) e 0x0002 (LS Series)
-            ushort[] candidatePids = new ushort[] { 0x0001, 0x0002 };
+            // Tenta PID 0x0001 (AK Series), 0x0002 (LS Series) e 0x0003 (CH Series)
+            ushort[] candidatePids = new ushort[] { 0x0001, 0x0002, 0x0003 };
             string devicePath = null;
 
             for (int i = 0; i < candidatePids.Length; i++)
@@ -70,17 +70,23 @@ namespace Vizzor
             }
         }
 
+        public static byte[] BuildPacket(byte displayValue, HardwareMetrics metrics)
+        {
+            // Frame DeepCool Digital (64 bytes)
+            byte[] buffer = new byte[64];
+            buffer[0] = 0x00; // Report ID
+            buffer[1] = 0xDA; // Header DeepCool
+            buffer[2] = (byte)Math.Max(0, Math.Min(99, (int)displayValue)); // Valor numérico principal (0-99)
+            buffer[3] = (byte)Math.Max(0, Math.Min(100, (int)Math.Round(metrics.CpuLoad))); // Barra de carga
+            buffer[4] = 0x01; // Modo Celsius / Ativo
+            return buffer;
+        }
+
         public bool SendMetrics(byte displayValue, HardwareMetrics metrics)
         {
             if (!EnsureConnected() || _stream == null) return false;
 
-            // Frame DeepCool Digital (64 bytes)
-            byte[] buffer = new byte[64];
-            buffer[0] = 0x00; // Report ID
-            buffer[1] = 0xda; // Header DeepCool
-            buffer[2] = displayValue; // Valor numérico principal (0-99)
-            buffer[3] = (byte)Math.Max(0, Math.Min(100, (int)Math.Round(metrics.CpuLoad))); // Barra de carga
-            buffer[4] = 0x01; // Modo Celsius / Ativo
+            byte[] buffer = BuildPacket(displayValue, metrics);
 
             try
             {

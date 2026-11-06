@@ -47,14 +47,17 @@ namespace Vizzor
             _nextDetection = DateTime.UtcNow.AddSeconds(5);
 
             // 2. Itera sobre os drivers suportados e tenta conectar
-            for (int i = 0; i < _supportedDrivers.LengthCount(); i++)
+            if (_supportedDrivers != null)
             {
-                var driver = _supportedDrivers[i];
-                if (driver.EnsureConnected())
+                for (int i = 0; i < _supportedDrivers.Count; i++)
                 {
-                    _activeDevice = driver;
-                    AppLog.Write("Cooler conectado: " + driver.DeviceName);
-                    return true;
+                    var driver = _supportedDrivers[i];
+                    if (driver.EnsureConnected())
+                    {
+                        _activeDevice = driver;
+                        AppLog.Write("Cooler conectado: " + driver.DeviceName);
+                        return true;
+                    }
                 }
             }
 
@@ -68,37 +71,19 @@ namespace Vizzor
             get { return _activeDevice != null && _activeDevice.IsConnected; }
         }
 
-        public bool SelectDriver(Type driverType)
-        {
-            for (int i = 0; i < _supportedDrivers.LengthCount(); i++)
-            {
-                if (_supportedDrivers[i].GetType() == driverType)
-                {
-                    _activeDevice = _supportedDrivers[i];
-                    return _activeDevice.EnsureConnected();
-                }
-            }
-            return false;
-        }
-
         public void Dispose()
         {
             if (!_disposed)
             {
-                for (int i = 0; i < _supportedDrivers.LengthCount(); i++)
+                if (_supportedDrivers != null)
                 {
-                    _supportedDrivers[i].Dispose();
+                    for (int i = 0; i < _supportedDrivers.Count; i++)
+                    {
+                        _supportedDrivers[i].Dispose();
+                    }
                 }
                 _disposed = true;
             }
-        }
-    }
-
-    internal static class ListExtensions
-    {
-        public static int LengthCount<T>(this IList<T> list)
-        {
-            return list != null ? list.Count : 0;
         }
     }
 }

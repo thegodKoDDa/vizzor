@@ -19,27 +19,33 @@ except ImportError:
 VENDOR_ID = 0xAA88   # 43656
 PRODUCT_ID = 0x8666  # 34406
 
+
+def clamp(val, min_val=0, max_val=99):
+    return max(min_val, min(max_val, int(round(val))))
+
+
 def build_packet(cpu_temp=0, gpu_temp=0, cpu_load=0, mem_load=0, mb_temp=0, gpu_load=0):
     """
-    Constrói o pacote de 24 bytes conforme especificação do protocolo:
+    Constrói o pacote de 11 bytes conforme especificação do protocolo Rise Mode Aura Ice:
     Byte 0: Report ID (0x00)
-    Byte 1: CPU Temp (°C)
-    Byte 2: GPU Temp (°C)
-    Byte 3: CPU Usage (%)
-    Byte 4: RAM Usage (%)
-    Byte 5: Motherboard Temp (°C)
-    Byte 6: GPU Usage (%)
-    Bytes 7-23: Zeros (padding)
+    Byte 1: Valor no Mostrador Físico / CPU Temp (°C, 0 a 99)
+    Byte 2: GPU Temp (°C, 0 a 99)
+    Byte 3: CPU Usage (%, 0 a 99)
+    Byte 4: RAM Usage (%, 0 a 99)
+    Byte 5: Motherboard Temp (°C, 0 a 99)
+    Byte 6: GPU Usage (%, 0 a 99)
+    Bytes 7-10: Zeros (padding)
     """
-    packet = bytearray(24)
+    packet = bytearray(11)
     packet[0] = 0x00
-    packet[1] = int(cpu_temp) & 0xFF
-    packet[2] = int(gpu_temp) & 0xFF
-    packet[3] = int(cpu_load) & 0xFF
-    packet[4] = int(mem_load) & 0xFF
-    packet[5] = int(mb_temp) & 0xFF
-    packet[6] = int(gpu_load) & 0xFF
+    packet[1] = clamp(cpu_temp)
+    packet[2] = clamp(gpu_temp)
+    packet[3] = clamp(cpu_load)
+    packet[4] = clamp(mem_load)
+    packet[5] = clamp(mb_temp)
+    packet[6] = clamp(gpu_load)
     return bytes(packet)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Envia métricas de teste para o visor Rise Mode Aura Ice.")
@@ -51,7 +57,7 @@ def main():
     parser.add_argument("--gpu-load", type=int, default=10, help="Uso de GPU em % (padrão: 10)")
     parser.add_argument("--interval", type=float, default=1.0, help="Intervalo de repetição em segundos (padrão: 1.0)")
     parser.add_argument("--count", type=int, default=5, help="Quantidade de pacotes a enviar (0 para infinito)")
-    parser.add_argument("--duration", type=int, default=0, help="Duracao em segundos para manter o envio ativo (0 usa count)")
+    parser.add_argument("--duration", type=int, default=0, help="Duração em segundos para manter o envio ativo (0 usa count)")
 
     args = parser.parse_args()
 
@@ -77,7 +83,7 @@ def main():
             mb_temp=args.mb_temp,
             gpu_load=args.gpu_load
         )
-        print(f"Enviando pacote: {list(packet)}")
+        print(f"Enviando pacote ({len(packet)} bytes): {list(packet)}")
 
         start_time = time.time()
         sent = 0
@@ -88,7 +94,7 @@ def main():
             print(f"[{sent}] Enviados {bytes_written} bytes ({elapsed:.1f}s decorridos)...", end="\r")
 
             if args.duration > 0 and elapsed >= args.duration:
-                print(f"\nDuracao de {args.duration}s atingida.")
+                print(f"\nDuração de {args.duration}s atingida.")
                 break
             if args.duration == 0 and args.count > 0 and sent >= args.count:
                 print(f"\nTotal de {args.count} pacotes atingido.")
@@ -97,10 +103,11 @@ def main():
             time.sleep(args.interval)
 
     except KeyboardInterrupt:
-        print("\nInterrompido pelo usuario.")
+        print("\nInterrompido pelo usuário.")
     finally:
         device.close()
         print("Conexão fechada.")
+
 
 if __name__ == "__main__":
     main()

@@ -87,7 +87,7 @@ def build_cooler_master_packet(display_val, metrics):
     buf[0] = 0x00
     buf[1] = 0x55
     buf[2] = clamp(display_val, 0, 99)
-    buf[3] = clamp(metrics.cpu_load, 0, 100)
+    buf[3] = clamp(metrics.gpu_temp, 0, 100)
     return bytes(buf)
 
 
@@ -148,7 +148,7 @@ class TestVizzorProtocols(unittest.TestCase):
         self.assertEqual(packet[0], 0x00)
         self.assertEqual(packet[1], 0x55)
         self.assertEqual(packet[2], 33)
-        self.assertEqual(packet[3], 22)
+        self.assertEqual(packet[3], 42) # GPU temp
 
 
 class TestDisplayModes(unittest.TestCase):
@@ -171,26 +171,34 @@ class TestDisplayModes(unittest.TestCase):
         val = clamp(self.metrics.ssd_temp)
         self.assertEqual(val, 41)
 
-    def test_mode_ssd_fallback_when_zero(self):
+    def test_mode_ssd_unavailable_when_zero(self):
         zero_ssd = MockHardwareMetrics(ssd_temp=0)
-        fallback = zero_ssd.ssd_temp if zero_ssd.ssd_temp > 0 else 38.0
-        self.assertEqual(fallback, 38.0)
+        self.assertEqual(clamp(zero_ssd.ssd_temp), 0)
 
-    def test_mode_alternating(self):
-        # Simula alternância
-        counter = 0
-        interval = 1
-        alternate_seconds = 5
-        show_cpu = True
+    def test_mode_alternating_1000ms_and_500ms(self):
+        # Simula alternância em milissegundos (funciona em 500ms, 1000ms e 2000ms)
+        for update_interval_ms in (500, 1000, 2000):
+            elapsed_ms = 0
+            alternate_seconds = 5
+            show_cpu = True
 
-        for sec in range(12):
-            counter += interval
-            if counter >= alternate_seconds:
-                counter = 0
-                show_cpu = not show_cpu
+            # Após 4 segundos (antes de atingir 5s), ainda deve estar em CPU
+            ticks_4s = 4000 // update_interval_ms
+            for _ in range(ticks_4s):
+                elapsed_ms += update_interval_ms
+                if elapsed_ms >= alternate_seconds * 1000:
+                    elapsed_ms = 0
+                    show_cpu = not show_cpu
+            self.assertTrue(show_cpu)
 
-        # 0s..4s: CPU, 5s..9s: GPU, 10s..: CPU
-        self.assertTrue(show_cpu)
+            # Ao completar 6 segundos, deve ter alternado para GPU
+            ticks_2s = 2000 // update_interval_ms
+            for _ in range(ticks_2s):
+                elapsed_ms += update_interval_ms
+                if elapsed_ms >= alternate_seconds * 1000:
+                    elapsed_ms = 0
+                    show_cpu = not show_cpu
+            self.assertFalse(show_cpu)
 
     def test_manual_slider_override(self):
         # Quando o slider manual estiver ativo, o valor manual sobrepõe os sensores

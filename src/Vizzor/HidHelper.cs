@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -68,9 +68,51 @@ namespace Vizzor
             public bool IsSupported { get; set; }
         }
 
-        public static System.Collections.Generic.List<UsbDeviceInfo> ScanAllHidDevices()
+        private static void TryReadHidStrings(string devicePath, out string manufacturer, out string product)
         {
-            var list = new System.Collections.Generic.List<UsbDeviceInfo>();
+            manufacturer = null;
+            product = null;
+
+            IntPtr ptr = CreateFile(
+                devicePath,
+                0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                0,
+                IntPtr.Zero);
+
+            if (ptr == INVALID_HANDLE_VALUE) return;
+
+            using (var handle = new SafeFileHandle(ptr, true))
+            {
+                const int bufferBytes = 256;
+                IntPtr strBuffer = Marshal.AllocHGlobal(bufferBytes);
+                try
+                {
+                    if (HidD_GetManufacturerString(handle.DangerousGetHandle(), strBuffer, bufferBytes))
+                    {
+                        string m = Marshal.PtrToStringUni(strBuffer);
+                        if (!string.IsNullOrWhiteSpace(m)) manufacturer = m.Trim();
+                    }
+
+                    if (HidD_GetProductString(handle.DangerousGetHandle(), strBuffer, bufferBytes))
+                    {
+                        string p = Marshal.PtrToStringUni(strBuffer);
+                        if (!string.IsNullOrWhiteSpace(p)) product = p.Trim();
+                    }
+                }
+                catch { }
+                finally
+                {
+                    Marshal.FreeHGlobal(strBuffer);
+                }
+            }
+        }
+
+        public static List<UsbDeviceInfo> ScanAllHidDevices()
+        {
+            var list = new List<UsbDeviceInfo>();
             Guid hidGuid = Guid.Empty;
             HidD_GetHidGuid(ref hidGuid);
 
@@ -82,7 +124,7 @@ namespace Vizzor
                 SP_DEVICE_INTERFACE_DATA ifData = new SP_DEVICE_INTERFACE_DATA();
                 ifData.cbSize = Marshal.SizeOf(typeof(SP_DEVICE_INTERFACE_DATA));
 
-                for (uint i = 0; i < 128; i++)
+                for (uint i = 0; i < 4096; i++)
                 {
                     if (!SetupDiEnumDeviceInterfaces(devInfo, IntPtr.Zero, ref hidGuid, i, ref ifData))
                         break;
@@ -107,26 +149,50 @@ namespace Vizzor
                                 int vidIdx = lower.IndexOf("vid_");
                                 int pidIdx = lower.IndexOf("pid_");
 
-                                if (vidIdx >= 0 && pidIdx >= 0)
+                                if (vidIdx >= 0 && vidIdx + 8 <= lower.Length &&
+                                    pidIdx >= 0 && pidIdx + 8 <= lower.Length)
                                 {
                                     string vid = lower.Substring(vidIdx + 4, 4);
                                     string pid = lower.Substring(pidIdx + 4, 4);
 
+                                    string rawMfg, rawProd;
+                                    TryReadHidStrings(path, out rawMfg, out rawProd);
+
                                     var info = new UsbDeviceInfo
                                     {
                                         DevicePath = path,
-                                        Vid = "0x" + vid.ToUpper(),
-                                        Pid = "0x" + pid.ToUpper(),
-                                        Manufacturer = "Desconhecido",
-                                        Product = "Dispositivo HID USB",
+                                        Vid = "0x" + vid.ToUpperInvariant(),
+                                        Pid = "0x" + pid.ToUpperInvariant(),
+                                        Manufacturer = !string.IsNullOrEmpty(rawMfg) ? rawMfg : Strings.UnknownManufacturer,
+                                        Product = !string.IsNullOrEmpty(rawProd) ? rawProd : Strings.GenericHidProduct,
                                         IsSupported = (vid == "aa88" || vid == "3633" || vid == "1e71" || vid == "0cf2" || vid == "2516")
                                     };
 
-                                    if (vid == "aa88") { info.Product = "Rise Mode Aura Ice / Mingyan Display"; info.Manufacturer = "Mingyan Tech"; }
-                                    else if (vid == "3633") { info.Product = "DeepCool Digital Display"; info.Manufacturer = "DeepCool"; }
-                                    else if (vid == "1e71") { info.Product = "NZXT Kraken Display"; info.Manufacturer = "NZXT"; }
-                                    else if (vid == "0cf2") { info.Product = "Lian Li Display"; info.Manufacturer = "Lian Li"; }
-                                    else if (vid == "2516") { info.Product = "Cooler Master Display"; info.Manufacturer = "Cooler Master"; }
+                                    if (vid == "aa88")
+                                    {
+                                        if (string.IsNullOrEmpty(rawProd)) info.Product = "Rise Mode Aura Ice / Mingyan Display";
+                                        if (string.IsNullOrEmpty(rawMfg)) info.Manufacturer = "Mingyan Tech";
+                                    }
+                                    else if (vid == "3633")
+                                    {
+                                        if (string.IsNullOrEmpty(rawProd)) info.Product = "DeepCool Digital Display";
+                                        if (string.IsNullOrEmpty(rawMfg)) info.Manufacturer = "DeepCool";
+                                    }
+                                    else if (vid == "1e71")
+                                    {
+                                        if (string.IsNullOrEmpty(rawProd)) info.Product = "NZXT Kraken Display";
+                                        if (string.IsNullOrEmpty(rawMfg)) info.Manufacturer = "NZXT";
+                                    }
+                                    else if (vid == "0cf2")
+                                    {
+                                        if (string.IsNullOrEmpty(rawProd)) info.Product = "Lian Li Display";
+                                        if (string.IsNullOrEmpty(rawMfg)) info.Manufacturer = "Lian Li";
+                                    }
+                                    else if (vid == "2516")
+                                    {
+                                        if (string.IsNullOrEmpty(rawProd)) info.Product = "Cooler Master Display";
+                                        if (string.IsNullOrEmpty(rawMfg)) info.Manufacturer = "Cooler Master";
+                                    }
 
                                     list.Add(info);
                                 }
@@ -163,7 +229,7 @@ namespace Vizzor
                 SP_DEVICE_INTERFACE_DATA ifData = new SP_DEVICE_INTERFACE_DATA();
                 ifData.cbSize = Marshal.SizeOf(typeof(SP_DEVICE_INTERFACE_DATA));
 
-                for (uint i = 0; i < 128; i++)
+                for (uint i = 0; i < 4096; i++)
                 {
                     if (!SetupDiEnumDeviceInterfaces(devInfo, IntPtr.Zero, ref hidGuid, i, ref ifData))
                         break;

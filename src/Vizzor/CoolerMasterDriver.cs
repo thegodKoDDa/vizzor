@@ -69,15 +69,21 @@ namespace Vizzor
             }
         }
 
+        public static byte[] BuildPacket(byte displayValue, HardwareMetrics metrics)
+        {
+            byte[] buffer = new byte[64];
+            buffer[0] = 0x00;
+            buffer[1] = 0x55;
+            buffer[2] = (byte)Math.Max(0, Math.Min(99, (int)displayValue));
+            buffer[3] = (byte)Math.Max(0, Math.Min(100, (int)Math.Round(metrics.GpuTemp)));
+            return buffer;
+        }
+
         public bool SendMetrics(byte displayValue, HardwareMetrics metrics)
         {
             if (!EnsureConnected() || _stream == null) return false;
 
-            byte[] buffer = new byte[64];
-            buffer[0] = 0x00;
-            buffer[1] = 0x55;
-            buffer[2] = displayValue;
-            buffer[3] = (byte)Math.Max(0, Math.Min(100, (int)Math.Round(metrics.GpuTemp)));
+            byte[] buffer = BuildPacket(displayValue, metrics);
 
             try
             {

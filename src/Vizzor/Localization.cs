@@ -17,9 +17,19 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Vizzor - Painel de Controle" : "Vizzor - Control Panel"; }
         }
 
+        public static string TrayTitle
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Vizzor - Visor do Water Cooler" : "Vizzor - Water Cooler Display"; }
+        }
+
         public static string OpenDashboard
         {
             get { return CurrentLanguage == Language.PtBr ? "Abrir Painel de Controle..." : "Open Control Panel..."; }
+        }
+
+        public static string CoolerPrefix
+        {
+            get { return "Cooler: "; }
         }
 
         public static string DisplayModeTitle
@@ -42,9 +52,19 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Temperatura do SSD NVMe" : "NVMe SSD Temperature"; }
         }
 
+        public static string SsdTempShort
+        {
+            get { return "SSD NVMe"; }
+        }
+
         public static string HighestTemp
         {
             get { return CurrentLanguage == Language.PtBr ? "O Mais Quente (CPU/GPU)" : "Highest Temp (Hotspot)"; }
+        }
+
+        public static string HighestTempShort
+        {
+            get { return CurrentLanguage == Language.PtBr ? "O Mais Quente" : "Highest Temp"; }
         }
 
         public static string Alternating
@@ -67,9 +87,19 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Uso de Memória RAM (%)" : "RAM Usage (%)"; }
         }
 
+        public static string RamLoadShort
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Uso da RAM (%)" : "RAM Usage (%)"; }
+        }
+
         public static string StealthMode
         {
             get { return CurrentLanguage == Language.PtBr ? "Modo Stealth (Apagar Visor)" : "Stealth Mode (Turn Off Display)"; }
+        }
+
+        public static string StealthModeShort
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Modo Stealth (Apagar)" : "Stealth Mode (Off)"; }
         }
 
         public static string UpdateSpeed
@@ -97,6 +127,21 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Tempo de Alternância" : "Alternating Interval"; }
         }
 
+        public static string Every3s
+        {
+            get { return CurrentLanguage == Language.PtBr ? "A cada 3 segundos" : "Every 3 seconds"; }
+        }
+
+        public static string Every5s
+        {
+            get { return CurrentLanguage == Language.PtBr ? "A cada 5 segundos" : "Every 5 seconds"; }
+        }
+
+        public static string Every10s
+        {
+            get { return CurrentLanguage == Language.PtBr ? "A cada 10 segundos" : "Every 10 seconds"; }
+        }
+
         public static string VisualBlinkAlert
         {
             get { return CurrentLanguage == Language.PtBr ? "Efeito: Piscar Visor em Alta Temp (> 85°C)" : "Effect: Blink Display on High Temp (> 85°C)"; }
@@ -107,9 +152,24 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Notificação no Windows (> 85°C)" : "Windows Notification (> 85°C)"; }
         }
 
+        public static string HighTempAlertTitle
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Vizzor - Alerta de Temperatura" : "Vizzor - Temperature Alert"; }
+        }
+
+        public static string HighTempAlertBody
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Atenção: {0} atingiu {1:F0}°C!" : "Warning: {0} reached {1:F0}°C!"; }
+        }
+
         public static string Autostart
         {
             get { return CurrentLanguage == Language.PtBr ? "Iniciar com o Windows" : "Start with Windows"; }
+        }
+
+        public static string AutostartErrorPrefix
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Falha ao configurar inicialização automática: " : "Failed to configure autostart: "; }
         }
 
         public static string DisableOldSoftware
@@ -122,8 +182,18 @@ namespace Vizzor
             get
             {
                 return CurrentLanguage == Language.PtBr
-                    ? "Deseja encerrar e desativar servicos e programas conflitantes de fabricantes de coolers (Rise Mode tifSer, SendTemp, DeepCool, etc.) para evitar conflitos no visor USB?"
+                    ? "Deseja encerrar e desativar serviços e programas conflitantes de fabricantes de coolers (Rise Mode tifSer, SendTemp, DeepCool, etc.) para evitar conflitos no visor USB?"
                     : "Do you want to terminate and disable conflicting background vendor software (Rise Mode tifSer, SendTemp, DeepCool, etc.) to prevent USB display conflicts?";
+            }
+        }
+
+        public static string DisableOldSoftwareSuccess
+        {
+            get
+            {
+                return CurrentLanguage == Language.PtBr
+                    ? "Softwares conflitantes desativados com sucesso!"
+                    : "Conflicting software disabled successfully!";
             }
         }
 
@@ -137,9 +207,29 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Conectado" : "Connected"; }
         }
 
+        public static string PcMonitorShort
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Monitor de PC" : "PC Monitor"; }
+        }
+
+        public static string DisplayOffShort
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Visor Apagado" : "Display Off"; }
+        }
+
+        public static string DisplayLabel
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Visor" : "Display"; }
+        }
+
         public static string Searching
         {
             get { return CurrentLanguage == Language.PtBr ? "Buscando..." : "Searching..."; }
+        }
+
+        public static string NotAvailable
+        {
+            get { return CurrentLanguage == Language.PtBr ? "N/D" : "N/A"; }
         }
 
         public static string ManualTestTitle
@@ -147,9 +237,69 @@ namespace Vizzor
             get { return CurrentLanguage == Language.PtBr ? "Teste Manual do Visor (Slider)" : "Manual Display Test (Slider)"; }
         }
 
+        public static string EnableManualTest
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Ativar Teste Manual" : "Enable Manual Test"; }
+        }
+
+        public static string UsbDiagnosticBtn
+        {
+            get { return CurrentLanguage == Language.PtBr ? "🔍 Diagnóstico USB..." : "🔍 USB Diagnostic..."; }
+        }
+
+        public static string MinimizeToTrayBtn
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Minimizar para a Bandeja" : "Minimize to Tray"; }
+        }
+
         public static string UsbScannerTitle
         {
             get { return CurrentLanguage == Language.PtBr ? "Diagnóstico de Dispositivos USB" : "USB Devices Diagnostic"; }
+        }
+
+        public static string ColManufacturer
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Fabricante" : "Manufacturer"; }
+        }
+
+        public static string ColProduct
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Produto" : "Product"; }
+        }
+
+        public static string ColSupported
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Suportado" : "Supported"; }
+        }
+
+        public static string YesUpper
+        {
+            get { return CurrentLanguage == Language.PtBr ? "SIM" : "YES"; }
+        }
+
+        public static string NoCap
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Não" : "No"; }
+        }
+
+        public static string CopyUsbReportBtn
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Copiar Relatório USB" : "Copy USB Report"; }
+        }
+
+        public static string ReportCopiedMsg
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Relatório copiado para a Área de Transferência!" : "Report copied to Clipboard!"; }
+        }
+
+        public static string UnknownManufacturer
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Desconhecido" : "Unknown"; }
+        }
+
+        public static string GenericHidProduct
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Dispositivo HID USB" : "USB HID Device"; }
         }
 
         public static string StandaloneModeTitle
@@ -165,6 +315,51 @@ namespace Vizzor
         public static string HardwareSensorsGroup
         {
             get { return CurrentLanguage == Language.PtBr ? " Telemetria do Sistema em Tempo Real " : " Real-Time System Telemetry "; }
+        }
+
+        public static string StorageLabel
+        {
+            get { return CurrentLanguage == Language.PtBr ? "SSD / Armazenamento:" : "SSD / Storage:"; }
+        }
+
+        public static string MbAndFansLabel
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Placa-Mãe & Fans:" : "Motherboard & Fans:"; }
+        }
+
+        public static string ActiveFans
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Fans Ativos" : "Active Fans"; }
+        }
+
+        public static string PawnIoWarning
+        {
+            get
+            {
+                return CurrentLanguage == Language.PtBr
+                    ? "⚠️ Sensor SMU requer driver PawnIO (Clique para obter)"
+                    : "⚠️ SMU sensor requires PawnIO driver (Click to get)";
+            }
+        }
+
+        public static string DigitalViewerSub
+        {
+            get { return CurrentLanguage == Language.PtBr ? "Visualizador Digital" : "Digital Display"; }
+        }
+
+        public static string DisplayTitleAlternating
+        {
+            get { return CurrentLanguage == Language.PtBr ? "ALTERNANDO" : "ALTERNATING"; }
+        }
+
+        public static string DisplayTitleClock
+        {
+            get { return CurrentLanguage == Language.PtBr ? "RELÓGIO" : "CLOCK"; }
+        }
+
+        public static string DisplayTitleOff
+        {
+            get { return CurrentLanguage == Language.PtBr ? "DESLIGADO" : "STEALTH OFF"; }
         }
 
         public static string PowerWatts

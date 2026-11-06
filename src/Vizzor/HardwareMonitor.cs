@@ -53,7 +53,8 @@ namespace Vizzor
                 try
                 {
                     return File.Exists(@"C:\Program Files\PawnIO\PawnIO.sys") ||
-                           File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"PawnIO\PawnIO.sys"));
+                           File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"PawnIO\PawnIO.sys")) ||
+                           File.Exists(Path.Combine(Environment.SystemDirectory, @"drivers\PawnIO.sys"));
                 }
                 catch { return false; }
             }
